@@ -1,339 +1,272 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#f472b6" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Bloom Temp" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#0f0810"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Bloom Temp"/>
   <title>Bloom · Temperature Tracker</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --rose-200: #fecdd9;
-      --rose-400: #fb7ba3;
-      --rose-500: #f43f7a;
-      --pink-300: #f9a8d4;
-      --pink-400: #f472b6;
-      --pink-500: #ec4899;
-      --pink-600: #db2777;
-      --cream: #fff8f9;
-      --text-dark: #4a1942;
-      --text-mid: #9b5c8a;
-      --text-light: #d4a0c8;
-      --above: #f43f7a;
-      --below: #818cf8;
-      --base-line: #f9a8d4;
+      --bg:        #0f0810;
+      --bg2:       #1a0f1c;
+      --bg3:       #221428;
+      --card:      rgba(30,15,34,0.88);
+      --border:    rgba(244,114,182,0.14);
+      --pink:      #f472b6;
+      --pink-hot:  #ec4899;
+      --pink-deep: #db2777;
+      --rose:      #f43f7a;
+      --indigo:    #818cf8;
+      --text:      #f9d4e8;
+      --text-mid:  #c084a0;
+      --text-dim:  #7a4f66;
+      --above:     #f43f7a;
+      --below:     #818cf8;
+      --heavy:     #ef4444;
+      --medium:    #f97316;
+      --light:     #fbbf24;
+      --spotting:  #a78bfa;
+      --glow:      rgba(244,114,182,0.18);
     }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+    body::before{content:'';position:fixed;inset:0;background:
+      radial-gradient(ellipse 50% 35% at 75% 5%,rgba(244,114,182,0.1) 0%,transparent 60%),
+      radial-gradient(ellipse 40% 30% at 15% 85%,rgba(219,39,119,0.07) 0%,transparent 60%);
+      pointer-events:none;z-index:0;}
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 0 86px;}
+    header{padding:36px 24px 14px;text-align:center;}
+    .logo{font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--pink);text-shadow:0 0 28px rgba(244,114,182,0.35);}
+    .logo em{font-style:italic;color:var(--rose);}
+    .tagline{font-size:0.7rem;color:var(--text-dim);letter-spacing:0.18em;text-transform:uppercase;margin-top:3px;}
 
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--cream);
-      color: var(--text-dark);
-      min-height: 100dvh;
-      overflow-x: hidden;
+    /* ── Card ───────────────────────────────────────────────────── */
+    .card{background:var(--card);backdrop-filter:blur(20px);border-radius:20px;border:1px solid var(--border);
+      box-shadow:0 4px 40px rgba(0,0,0,0.4),inset 0 1px 0 rgba(244,114,182,0.07);
+      margin:0 14px 14px;padding:20px;animation:fadeUp .4s ease both;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+    .card-title{font-family:'Playfair Display',serif;font-size:1rem;color:var(--pink);margin-bottom:16px;}
+
+    /* ── Sync bar ───────────────────────────────────────────────── */
+    .sync-bar{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:10px;font-size:0.74rem;
+      margin-bottom:13px;background:rgba(244,114,182,0.05);color:var(--text-mid);border:1px solid rgba(244,114,182,0.1);}
+    .sync-bar.ok {background:rgba(74,222,128,0.06);color:#4ade80;border-color:rgba(74,222,128,0.15);}
+    .sync-bar.err{background:rgba(248,113,113,0.06);color:#f87171;border-color:rgba(248,113,113,0.15);}
+    .sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinning{animation:spin 1s linear infinite;}
+
+    /* ── Today ──────────────────────────────────────────────────── */
+    .big-temp{font-family:'Playfair Display',serif;font-size:4rem;color:var(--pink);text-align:center;line-height:1;
+      text-shadow:0 0 36px rgba(244,114,182,0.3);}
+    .big-temp span{font-size:1.5rem;color:var(--text-mid);}
+    .big-time{text-align:center;font-size:0.74rem;color:var(--text-dim);margin-top:4px;}
+    .diff-display{text-align:center;margin-top:8px;}
+    .status-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:999px;
+      font-size:0.8rem;font-weight:500;border:1px solid transparent;}
+    .chip-above{background:rgba(244,63,122,0.12);color:var(--above);border-color:rgba(244,63,122,0.25);}
+    .chip-below{background:rgba(129,140,248,0.12);color:var(--below);border-color:rgba(129,140,248,0.25);}
+    .chip-base {background:rgba(244,114,182,0.07);color:var(--text-mid);border-color:var(--border);}
+    .no-reading{text-align:center;padding:18px;color:var(--text-dim);font-size:0.86rem;line-height:1.7;}
+
+    /* ── Today tags row ─────────────────────────────────────────── */
+    .today-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;justify-content:center;}
+    .tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;
+      font-size:0.73rem;background:rgba(244,114,182,0.08);border:1px solid rgba(244,114,182,0.15);color:var(--text-mid);}
+    .tag.flow-heavy  {background:rgba(239,68,68,0.1);   border-color:rgba(239,68,68,0.25);  color:#ef4444;}
+    .tag.flow-medium {background:rgba(249,115,22,0.1);  border-color:rgba(249,115,22,0.25); color:#f97316;}
+    .tag.flow-light  {background:rgba(251,191,36,0.1);  border-color:rgba(251,191,36,0.25); color:#fbbf24;}
+    .tag.flow-spotting{background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.25);color:#a78bfa;}
+    .tag.cycle-start {background:rgba(244,63,122,0.15); border-color:rgba(244,63,122,0.3);  color:var(--rose);}
+
+    /* ── Buttons ────────────────────────────────────────────────── */
+    .btn{border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;transition:all .2s;}
+    .btn-primary{background:linear-gradient(135deg,var(--pink-hot),var(--rose));color:#fff;
+      padding:13px 20px;font-size:0.9rem;box-shadow:0 4px 20px rgba(244,114,182,0.25);}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(244,114,182,0.35);}
+    .btn-primary:active{transform:scale(0.97);}
+    .btn-ghost{background:rgba(244,114,182,0.07);border:1px solid rgba(244,114,182,0.2);color:var(--pink);
+      padding:9px 14px;font-size:0.8rem;display:flex;align-items:center;gap:5px;justify-content:center;}
+    .btn-ghost:hover{background:rgba(244,114,182,0.14);}
+    .btn-refresh{background:none;border:1px solid rgba(244,114,182,0.18);border-radius:10px;color:var(--text-dim);
+      font-family:'DM Sans',sans-serif;font-size:0.76rem;padding:6px 13px;cursor:pointer;transition:all .2s;
+      display:flex;align-items:center;gap:5px;}
+    .btn-refresh:hover{color:var(--pink);border-color:var(--pink);}
+
+    /* ── Inline chart ───────────────────────────────────────────── */
+    .chart-wrap-inline{position:relative;height:175px;margin-top:4px;}
+    .chart-wrap-inline canvas{width:100%;height:100%;}
+    .tilt-hint{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;
+      font-size:0.7rem;color:var(--text-dim);}
+    .legend{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;}
+    .legend-item{display:flex;align-items:center;gap:5px;font-size:0.71rem;color:var(--text-mid);}
+    .legend-dot{width:8px;height:8px;border-radius:50%;}
+
+    /* ── Fullscreen chart ───────────────────────────────────────── */
+    .chart-fullscreen{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;
+      flex-direction:column;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,12px) env(safe-area-inset-bottom,0) env(safe-area-inset-left,12px);}
+    .chart-fullscreen.visible{display:flex;}
+    .chart-fs-header{display:flex;align-items:center;justify-content:space-between;padding:12px 8px 4px;flex-shrink:0;}
+    .chart-fs-title{font-family:'Playfair Display',serif;font-size:1rem;color:var(--pink);}
+    .chart-fs-meta{font-size:0.7rem;color:var(--text-dim);}
+    .chart-fs-canvas-wrap{flex:1;position:relative;min-height:0;}
+    .chart-fs-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;}
+    .chart-fs-footer{display:flex;gap:14px;padding:6px 8px 2px;flex-shrink:0;align-items:center;}
+
+    /* ── Tooltip ────────────────────────────────────────────────── */
+    .chart-tooltip{position:fixed;background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+      padding:12px 16px;pointer-events:none;z-index:300;min-width:160px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.5);transform:translate(-50%,-110%);transition:opacity .15s;}
+    .chart-tooltip.hidden{opacity:0;}
+    .tt-date{font-size:0.7rem;color:var(--text-dim);margin-bottom:4px;}
+    .tt-temp{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--pink);}
+    .tt-diff{font-size:0.76rem;margin-top:2px;}
+    .tt-time{font-size:0.72rem;color:var(--text-dim);margin-top:2px;}
+    .tt-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+    .tt-note{font-size:0.74rem;color:var(--text-mid);margin-top:5px;font-style:italic;line-height:1.4;}
+
+    /* ── Log ────────────────────────────────────────────────────── */
+    .log-list{display:flex;flex-direction:column;gap:8px;max-height:380px;overflow-y:auto;}
+    .log-item{background:rgba(255,255,255,0.03);border-radius:14px;border:1px solid var(--border);overflow:hidden;}
+    .log-item-main{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;}
+    .log-item-main:hover{background:rgba(244,114,182,0.04);}
+    .log-left{}
+    .log-date{font-size:0.76rem;color:var(--text-dim);}
+    .log-temp-row{display:flex;align-items:baseline;gap:6px;}
+    .log-temp{font-size:1rem;font-weight:500;}
+    .log-time-badge{font-size:0.68rem;color:var(--text-dim);}
+    .log-right{display:flex;align-items:center;gap:6px;}
+    .log-diff{font-size:0.72rem;padding:3px 9px;border-radius:999px;}
+    .log-edit-btn{background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:0.8rem;
+      padding:3px 7px;border-radius:7px;transition:color .2s;}
+    .log-edit-btn:hover{color:var(--pink);}
+    .log-item-extra{padding:0 14px 11px;display:none;}
+    .log-item-extra.open{display:block;}
+    .log-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px;}
+    .log-note{font-size:0.76rem;color:var(--text-mid);font-style:italic;line-height:1.4;}
+    .empty-state{text-align:center;padding:28px;color:var(--text-dim);font-size:0.86rem;}
+
+    /* ── Analytics ──────────────────────────────────────────────── */
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+    .stat-box{background:rgba(244,114,182,0.05);border:1px solid var(--border);border-radius:14px;padding:14px;}
+    .stat-label{font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;}
+    .stat-value{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--pink);}
+    .stat-sub{font-size:0.7rem;color:var(--text-dim);margin-top:2px;}
+    .cycle-history-list{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;}
+    .cycle-row{display:flex;justify-content:space-between;align-items:center;
+      padding:9px 12px;background:rgba(244,114,182,0.04);border-radius:11px;border:1px solid var(--border);}
+    .cycle-label{font-size:0.8rem;color:var(--text-mid);}
+    .cycle-value{font-size:0.8rem;color:var(--text);}
+    .trend-wrap{position:relative;height:80px;margin-top:4px;}
+    .trend-wrap canvas{width:100%;height:100%;}
+
+    /* ── Settings ───────────────────────────────────────────────── */
+    .setting-row{display:flex;align-items:center;justify-content:space-between;
+      padding:13px 0;border-bottom:1px solid rgba(244,114,182,0.07);}
+    .setting-label{font-size:0.87rem;color:var(--text-mid);}
+    .setting-sub{font-size:0.68rem;color:var(--text-dim);margin-top:2px;}
+    input.setting-input{width:86px;padding:8px 11px;border:1px solid rgba(244,114,182,0.22);border-radius:10px;
+      font-size:0.93rem;color:var(--text);background:rgba(255,255,255,0.05);font-family:'DM Sans',sans-serif;outline:none;margin-bottom:0;}
+    input.setting-input:focus{border-color:var(--pink);}
+
+    /* ── Modal ──────────────────────────────────────────────────── */
+    .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);
+      z-index:400;align-items:flex-end;justify-content:center;}
+    .modal-backdrop.open{display:flex;}
+    .modal{background:var(--bg2);border:1px solid var(--border);border-radius:24px 24px 0 0;
+      padding:22px 22px max(22px,env(safe-area-inset-bottom));width:100%;max-width:480px;
+      animation:slideUp .28s cubic-bezier(.34,1.56,.64,1);max-height:90vh;overflow-y:auto;}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+    .modal-handle{width:38px;height:4px;border-radius:2px;background:var(--text-dim);margin:0 auto 18px;}
+    .modal-title{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--pink);margin-bottom:18px;}
+    .field-label{display:block;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;
+      color:var(--text-dim);margin-bottom:7px;}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    input[type=number],input[type=date],input[type=time],input[type=text]{
+      width:100%;padding:12px 14px;border:1px solid rgba(244,114,182,0.2);border-radius:13px;
+      font-family:'DM Sans',sans-serif;font-size:1rem;color:var(--text);
+      background:rgba(255,255,255,0.04);outline:none;transition:border-color .2s;margin-bottom:13px;}
+    input[type=number]:focus,input[type=date]:focus,input[type=time]:focus,input[type=text]:focus{border-color:var(--pink);}
+    input[type=date]::-webkit-calendar-picker-indicator,
+    input[type=time]::-webkit-calendar-picker-indicator{filter:invert(.7) sepia(1) saturate(3) hue-rotate(290deg);}
+    textarea{width:100%;padding:12px 14px;border:1px solid rgba(244,114,182,0.2);border-radius:13px;
+      font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--text);background:rgba(255,255,255,0.04);
+      outline:none;resize:none;height:72px;transition:border-color .2s;margin-bottom:13px;}
+    textarea:focus{border-color:var(--pink);}
+
+    /* mood pills */
+    .mood-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px;}
+    .mood-pill{padding:7px 13px;border-radius:999px;font-size:0.8rem;cursor:pointer;
+      background:rgba(244,114,182,0.06);border:1px solid rgba(244,114,182,0.18);color:var(--text-mid);
+      transition:all .15s;user-select:none;}
+    .mood-pill.selected{background:rgba(244,114,182,0.2);border-color:var(--pink);color:var(--pink);}
+
+    /* flow pills */
+    .flow-grid{display:flex;gap:7px;margin-bottom:13px;flex-wrap:wrap;}
+    .flow-pill{padding:7px 13px;border-radius:999px;font-size:0.8rem;cursor:pointer;
+      border:1px solid rgba(244,114,182,0.18);background:rgba(244,114,182,0.05);color:var(--text-dim);
+      transition:all .15s;user-select:none;}
+    .flow-pill[data-flow=heavy]  .sel{display:none;}
+    .flow-pill.sel-heavy  {background:rgba(239,68,68,0.15);  border-color:#ef4444;color:#ef4444;}
+    .flow-pill.sel-medium {background:rgba(249,115,22,0.15); border-color:#f97316;color:#f97316;}
+    .flow-pill.sel-light  {background:rgba(251,191,36,0.15); border-color:#fbbf24;color:#fbbf24;}
+    .flow-pill.sel-spotting{background:rgba(167,139,250,0.15);border-color:#a78bfa;color:#a78bfa;}
+
+    .cycle-toggle{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:13px;
+      background:rgba(244,63,122,0.07);border:1px solid rgba(244,63,122,0.2);cursor:pointer;
+      margin-bottom:13px;user-select:none;transition:background .15s;}
+    .cycle-toggle.on{background:rgba(244,63,122,0.15);border-color:var(--rose);}
+    .cycle-toggle-label{font-size:0.85rem;color:var(--text-mid);}
+    .cycle-toggle.on .cycle-toggle-label{color:var(--rose);}
+    .cycle-toggle-icon{font-size:1.1rem;}
+
+    .modal-row{display:flex;gap:9px;margin-top:2px;}
+    .btn-cancel{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);
+      color:var(--text-mid);padding:13px;font-size:0.88rem;flex:1;border-radius:13px;
+      font-family:'DM Sans',sans-serif;cursor:pointer;}
+
+    /* ── Nav ────────────────────────────────────────────────────── */
+    .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,8,16,0.93);
+      backdrop-filter:blur(24px);border-top:1px solid rgba(244,114,182,0.09);
+      display:flex;justify-content:space-around;
+      padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:50;}
+    .nav-btn{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;
+      cursor:pointer;padding:4px 14px;color:var(--text-dim);font-family:'DM Sans',sans-serif;
+      font-size:0.64rem;transition:color .2s;}
+    .nav-btn.active{color:var(--pink);}
+    .nav-btn svg{width:21px;height:21px;}
+    .view{display:none;}
+    .view.active{display:block;}
+
+    /* ── Toast ──────────────────────────────────────────────────── */
+    .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(18px);
+      background:var(--pink-deep);color:#fff;padding:9px 20px;border-radius:999px;font-size:0.82rem;
+      opacity:0;transition:all .28s;pointer-events:none;z-index:500;white-space:nowrap;
+      box-shadow:0 4px 20px rgba(244,114,182,0.35);}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+    .skeleton{background:linear-gradient(90deg,rgba(244,114,182,0.05) 25%,rgba(244,114,182,0.11) 50%,rgba(244,114,182,0.05) 75%);
+      background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:10px;}
+    @keyframes shimmer{to{background-position:-200% 0}}
+
+    @media screen and (orientation:landscape) and (max-height:500px){
+      .bottom-nav{display:none;}
+      .app{padding-bottom:0;}
     }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 60% 40% at 80% 10%, rgba(249,168,212,0.25) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 50% at 10% 80%, rgba(253,164,189,0.2) 0%, transparent 60%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .app {
-      position: relative;
-      z-index: 1;
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 0 0 100px;
-    }
-
-    header {
-      padding: 32px 24px 20px;
-      text-align: center;
-    }
-
-    .logo {
-      font-family: 'Playfair Display', serif;
-      font-size: 2rem;
-      color: var(--pink-600);
-      letter-spacing: -0.5px;
-    }
-
-    .logo em { font-style: italic; color: var(--rose-400); }
-
-    .tagline {
-      font-size: 0.78rem;
-      color: var(--text-light);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    .card {
-      background: rgba(255,255,255,0.75);
-      backdrop-filter: blur(16px);
-      border-radius: 24px;
-      border: 1px solid rgba(253,164,189,0.3);
-      box-shadow: 0 4px 32px rgba(244,114,182,0.08);
-      margin: 0 16px 16px;
-      padding: 20px;
-      animation: fadeUp 0.4s ease both;
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .card-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      color: var(--pink-600);
-      margin-bottom: 16px;
-    }
-
-    .sync-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 0.78rem;
-      margin-bottom: 14px;
-      background: rgba(249,168,212,0.12);
-      color: var(--text-mid);
-    }
-
-    .sync-bar.ok  { background: rgba(134,239,172,0.12); color: #15803d; }
-    .sync-bar.err { background: rgba(248,113,113,0.1);  color: #dc2626; }
-
-    .sync-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: currentColor;
-      flex-shrink: 0;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinning { animation: spin 1s linear infinite; }
-
-    .big-temp {
-      font-family: 'Playfair Display', serif;
-      font-size: 4rem;
-      color: var(--pink-600);
-      text-align: center;
-      line-height: 1;
-    }
-
-    .big-temp span { font-size: 1.6rem; }
-
-    .diff-display { text-align: center; margin-top: 8px; }
-
-    .status-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 16px;
-      border-radius: 999px;
-      font-size: 0.82rem;
-      font-weight: 500;
-    }
-
-    .chip-above { background: rgba(244,63,122,0.12); color: var(--above); }
-    .chip-below { background: rgba(129,140,248,0.12); color: var(--below); }
-    .chip-base  { background: rgba(253,164,189,0.2);  color: var(--text-mid); }
-
-    .no-reading {
-      text-align: center;
-      padding: 20px;
-      color: var(--text-light);
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-
-    .btn-refresh {
-      background: none;
-      border: 2px solid rgba(249,168,212,0.4);
-      border-radius: 12px;
-      color: var(--text-mid);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.8rem;
-      padding: 7px 16px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin: 12px auto 0;
-    }
-
-    .btn-refresh:hover { background: rgba(249,168,212,0.15); }
-
-    .chart-wrap { position: relative; height: 200px; margin-top: 4px; }
-    canvas#chart { width: 100%; height: 100%; }
-
-    .legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.75rem;
-      color: var(--text-mid);
-    }
-
-    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-
-    .log-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 320px;
-      overflow-y: auto;
-    }
-
-    .log-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
-      background: rgba(255,255,255,0.6);
-      border-radius: 12px;
-      border: 1px solid rgba(253,164,189,0.2);
-    }
-
-    .log-date { font-size: 0.8rem; color: var(--text-light); }
-    .log-temp { font-size: 1rem; font-weight: 500; }
-    .log-diff { font-size: 0.75rem; padding: 3px 10px; border-radius: 999px; }
-
-    .empty-state {
-      text-align: center;
-      padding: 30px;
-      color: var(--text-light);
-      font-size: 0.9rem;
-    }
-
-    .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(253,164,189,0.2);
-    }
-
-    .setting-label { font-size: 0.9rem; color: var(--text-mid); }
-
-    input[type="number"] {
-      width: 90px;
-      padding: 8px 12px;
-      border: 2px solid var(--rose-200);
-      border-radius: 12px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.95rem;
-      color: var(--text-dark);
-      background: rgba(255,255,255,0.9);
-      outline: none;
-    }
-
-    input[type="number"]:focus { border-color: var(--pink-400); }
-
-    .btn {
-      border: none;
-      border-radius: 14px;
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--pink-500), var(--rose-500));
-      color: white;
-      padding: 8px 16px;
-      font-size: 0.82rem;
-      box-shadow: 0 4px 16px rgba(236,72,153,0.25);
-    }
-
-    .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: rgba(255,255,255,0.9);
-      backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(253,164,189,0.3);
-      display: flex;
-      justify-content: space-around;
-      padding: 10px 0 max(10px, env(safe-area-inset-bottom));
-      z-index: 50;
-    }
-
-    .nav-btn {
-      background: none;
-      border: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      cursor: pointer;
-      padding: 4px 16px;
-      color: var(--text-light);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.7rem;
-      transition: color 0.2s;
-    }
-
-    .nav-btn.active { color: var(--pink-600); }
-    .nav-btn svg { width: 22px; height: 22px; }
-
-    .view { display: none; }
-    .view.active { display: block; }
-
-    .toast {
-      position: fixed;
-      bottom: 90px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--pink-600);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      opacity: 0;
-      transition: all 0.3s;
-      pointer-events: none;
-      z-index: 100;
-      white-space: nowrap;
-    }
-
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    .skeleton {
-      background: linear-gradient(90deg,
-        rgba(253,164,189,0.15) 25%,
-        rgba(253,164,189,0.3) 50%,
-        rgba(253,164,189,0.15) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 8px;
-    }
-
-    @keyframes shimmer { to { background-position: -200% 0; } }
   </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- HOME -->
+  <!-- ══ HOME ══════════════════════════════════════════════════════ -->
   <div class="view active" id="view-home">
     <header>
       <div class="logo">Bloom <em>·</em> Temp</div>
@@ -346,27 +279,36 @@
         <div class="sync-dot spinning"></div>
         <span id="sync-text">Fetching latest reading...</span>
       </div>
-      <div id="today-content">
-        <div class="skeleton" style="height:64px;margin:10px 0"></div>
+      <div id="today-content"><div class="skeleton" style="height:66px;margin:10px 0"></div></div>
+      <div id="today-tags" class="today-tags"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-ghost" style="flex:1" onclick="openModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path d="M17.586 3.414a2 2 0 112.828 2.828L11 15l-4 1 1-4z"/></svg>
+          Log / Edit today
+        </button>
+        <button class="btn-refresh" onclick="loadData()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
       </div>
-      <button class="btn-refresh" onclick="loadData()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-        Refresh
-      </button>
     </div>
 
-    <div class="card" style="animation-delay:0.05s">
-      <div class="card-title">📈 30-day overview</div>
-      <div class="chart-wrap"><canvas id="chart"></canvas></div>
+    <div class="card" style="animation-delay:.06s">
+      <div class="card-title">📈 Temperature chart</div>
+      <div class="chart-wrap-inline"><canvas id="chart-inline"></canvas></div>
       <div class="legend">
         <div class="legend-item"><div class="legend-dot" style="background:var(--above)"></div>Above base</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--below)"></div>Below base</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--base-line);border:1px dashed var(--pink-400)"></div>Base temp</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(244,114,182,.4);border:1px dashed rgba(244,114,182,.5)"></div>Base</div>
+      </div>
+      <div class="tilt-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;opacity:.5"><rect x="4" y="2" width="16" height="20" rx="2"/></svg>
+        Tilt your phone for the full chart · tap any dot for details
       </div>
     </div>
   </div>
 
-  <!-- LOG -->
+  <!-- ══ LOG ═══════════════════════════════════════════════════════ -->
   <div class="view" id="view-log">
     <header>
       <div class="logo">Bloom <em>·</em> Temp</div>
@@ -374,263 +316,714 @@
     </header>
     <div class="card">
       <div class="card-title">🗓️ All readings</div>
-      <div class="log-list" id="log-list">
-        <div class="empty-state">Loading... 🌸</div>
-      </div>
+      <div class="log-list" id="log-list"><div class="empty-state">Loading... 🌸</div></div>
     </div>
   </div>
 
-  <!-- SETTINGS -->
+  <!-- ══ ANALYTICS ═════════════════════════════════════════════════ -->
+  <div class="view" id="view-analytics">
+    <header>
+      <div class="logo">Bloom <em>·</em> Temp</div>
+      <div class="tagline">Analytics</div>
+    </header>
+    <div class="card" id="analytics-card">
+      <div class="card-title">📊 This cycle</div>
+      <div id="analytics-content"><div class="empty-state">Loading... 🌸</div></div>
+    </div>
+    <div class="card" style="animation-delay:.06s">
+      <div class="card-title">📅 Cycle history</div>
+      <div class="cycle-history-list" id="cycle-history"></div>
+    </div>
+    <div class="card" style="animation-delay:.1s">
+      <div class="card-title">📉 30-day temp trend</div>
+      <div class="trend-wrap"><canvas id="trend-canvas"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ══ SETTINGS ═══════════════════════════════════════════════════ -->
   <div class="view" id="view-settings">
     <header>
       <div class="logo">Bloom <em>·</em> Temp</div>
       <div class="tagline">Settings</div>
     </header>
-
     <div class="card">
       <div class="card-title">⚙️ Preferences</div>
       <div class="setting-row">
-        <div>
-          <div class="setting-label">Base temperature</div>
-          <div style="font-size:0.72rem;color:var(--text-light);margin-top:2px">Your personal normal temp</div>
-        </div>
+        <div><div class="setting-label">Base temperature</div><div class="setting-sub">Your personal normal temp</div></div>
         <div style="display:flex;align-items:center;gap:8px">
-          <input type="number" id="base-temp-input" step="0.1" min="35" max="38" placeholder="36.5" />
-          <span style="color:var(--text-light);font-size:0.85rem">°C</span>
+          <input type="number" id="base-temp-input" class="setting-input" step="0.1" min="35" max="38" placeholder="36.5"/>
+          <span style="color:var(--text-dim);font-size:0.8rem">°C</span>
         </div>
       </div>
-      <div class="setting-row" style="border:none;padding-top:16px">
-        <div>
-          <div class="setting-label">Export data</div>
-          <div style="font-size:0.72rem;color:var(--text-light);margin-top:2px">Download as CSV</div>
-        </div>
-        <button class="btn btn-primary" onclick="exportCSV()">Export</button>
+      <div class="setting-row" style="border:none;padding-top:14px">
+        <div><div class="setting-label">Export data</div><div class="setting-sub">Download as CSV</div></div>
+        <button class="btn btn-primary" style="padding:8px 16px;font-size:0.8rem" onclick="exportCSV()">Export</button>
       </div>
     </div>
-
-    <div class="card" style="animation-delay:0.05s">
+    <div class="card" style="animation-delay:.06s">
       <div class="card-title">ℹ️ How it works</div>
-      <p style="font-size:0.82rem;color:var(--text-mid);line-height:1.6">
-        The PC downstairs keeps the <strong>Bloom Bridge</strong> tab open. It listens for the thermometer via Bluetooth and saves each reading to the cloud automatically.<br><br>
-        This app refreshes whenever you open it, or tap the Refresh button. Your readings sync instantly. 🌸
+      <p style="font-size:0.79rem;color:var(--text-mid);line-height:1.7">
+        The PC downstairs keeps <strong style="color:var(--pink)">Bloom Bridge</strong> open in Chrome. It connects to the thermometer via Bluetooth and saves each reading automatically.<br><br>
+        Tilt your phone sideways for the full chart. Tap any dot to see reading details. 🌸
       </p>
     </div>
   </div>
 
+</div><!-- /.app -->
+
+<!-- ══ FULLSCREEN CHART ════════════════════════════════════════════ -->
+<div class="chart-fullscreen" id="chart-fullscreen">
+  <div class="chart-fs-header">
+    <div class="chart-fs-title">Bloom · Temperature Chart</div>
+    <div class="chart-fs-meta" id="fs-meta"></div>
+  </div>
+  <div class="chart-fs-canvas-wrap"><canvas id="chart-fs"></canvas></div>
+  <div class="chart-fs-footer">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--above)"></div>Above</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--below)"></div>Below</div>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(244,114,182,.4);border:1px dashed rgba(244,114,182,.5)"></div>Base</div>
+    <div style="margin-left:auto;font-size:0.68rem;color:var(--text-dim)">Tilt back · tap dot for details</div>
+  </div>
 </div>
 
+<!-- ══ TOOLTIP ════════════════════════════════════════════════════ -->
+<div class="chart-tooltip hidden" id="chart-tooltip">
+  <div class="tt-date" id="tt-date"></div>
+  <div class="tt-temp" id="tt-temp"></div>
+  <div class="tt-diff" id="tt-diff"></div>
+  <div class="tt-time" id="tt-time"></div>
+  <div class="tt-tags" id="tt-tags"></div>
+  <div class="tt-note" id="tt-note"></div>
+</div>
+
+<!-- ══ ENTRY / EDIT MODAL ════════════════════════════════════════ -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeModalOutside(event)">
+  <div class="modal" id="main-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Log reading</div>
+
+    <div class="field-row">
+      <div>
+        <label class="field-label">Date</label>
+        <input type="date" id="m-date"/>
+      </div>
+      <div>
+        <label class="field-label">Time taken</label>
+        <input type="time" id="m-time"/>
+      </div>
+    </div>
+
+    <label class="field-label">Temperature (°C)</label>
+    <input type="number" id="m-temp" step="0.01" min="30" max="45" placeholder="36.50"/>
+
+    <label class="field-label">Period flow</label>
+    <div class="flow-grid" id="flow-grid">
+      <div class="flow-pill" data-flow="heavy"   onclick="toggleFlow('heavy')"  >🔴 Heavy</div>
+      <div class="flow-pill" data-flow="medium"  onclick="toggleFlow('medium')" >🟠 Medium</div>
+      <div class="flow-pill" data-flow="light"   onclick="toggleFlow('light')"  >🟡 Light</div>
+      <div class="flow-pill" data-flow="spotting" onclick="toggleFlow('spotting')">🟣 Spotting</div>
+    </div>
+
+    <div class="cycle-toggle" id="cycle-toggle" onclick="toggleCycleStart()">
+      <span class="cycle-toggle-icon">🩸</span>
+      <span class="cycle-toggle-label">Mark as new cycle start</span>
+    </div>
+
+    <label class="field-label">Mood & notes</label>
+    <div class="mood-grid" id="mood-grid">
+      <div class="mood-pill" data-mood="poor_sleep"  onclick="toggleMood(this)">😴 Poor sleep</div>
+      <div class="mood-pill" data-mood="sick"        onclick="toggleMood(this)">🤒 Sick</div>
+      <div class="mood-pill" data-mood="stressed"    onclick="toggleMood(this)">😰 Stressed</div>
+      <div class="mood-pill" data-mood="alcohol"     onclick="toggleMood(this)">🍷 Alcohol</div>
+      <div class="mood-pill" data-mood="travel"      onclick="toggleMood(this)">✈️ Travel</div>
+      <div class="mood-pill" data-mood="exercise"    onclick="toggleMood(this)">🏃 Exercise</div>
+    </div>
+
+    <label class="field-label">Notes (optional)</label>
+    <textarea id="m-notes" placeholder="Any extra notes…"></textarea>
+
+    <div class="modal-row">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1;padding:13px" onclick="saveReading()">Save reading ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ NAV ════════════════════════════════════════════════════════ -->
 <nav class="bottom-nav">
   <button class="nav-btn active" id="nav-home" onclick="showView('home')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    Today
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Today
   </button>
   <button class="nav-btn" id="nav-log" onclick="showView('log')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
-    History
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>History
+  </button>
+  <button class="nav-btn" id="nav-analytics" onclick="showView('analytics')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics
   </button>
   <button class="nav-btn" id="nav-settings" onclick="showView('settings')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-    Settings
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings
   </button>
 </nav>
 
 <div class="toast" id="toast"></div>
 
+<!-- ══ SCRIPT ════════════════════════════════════════════════════ -->
 <script>
-  const SUPABASE_URL = 'https://xdclhumknqsfawpoalme.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_bz5enQJoCiBKrujxjMOUaQ_RhnP9iJA';
+const SB_URL = 'https://xdclhumknqsfawpoalme.supabase.co';
+const SB_KEY = 'sb_publishable_bz5enQJoCiBKrujxjMOUaQ_RhnP9iJA';
 
-  let readings = [];
-  let baseTemp = parseFloat(localStorage.getItem('bloom-base') || '36.5');
+let readings   = [];
+let baseTemp   = parseFloat(localStorage.getItem('bloom-base') || '36.5');
+let isLandscape= false;
+let activeFlow = null;
+let cycleStart = false;
+let editingDate= null; // null = new, string = editing existing
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('base-temp-input').value = baseTemp;
-    document.getElementById('base-temp-input').addEventListener('change', e => {
-      baseTemp = parseFloat(e.target.value) || 36.5;
-      localStorage.setItem('bloom-base', baseTemp);
-      drawChart(); renderLog(); renderToday();
-      showToast('Base temperature updated 🌸');
-    });
-    loadData();
-    setInterval(loadData, 60000);
+// ── Init ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const bi = document.getElementById('base-temp-input');
+  bi.value = baseTemp;
+  bi.addEventListener('change', e => {
+    baseTemp = parseFloat(e.target.value) || 36.5;
+    localStorage.setItem('bloom-base', baseTemp);
+    drawInlineChart(); drawFsChart(); renderToday(); renderAnalytics();
+    showToast('Base temperature updated 🌸');
+  });
+  loadData();
+  setInterval(loadData, 60000);
+  setupOrientation();
+  setupTooltip();
+});
+
+// ── Supabase ──────────────────────────────────────────────────────
+async function sbFetch(path, opts={}) {
+  const res = await fetch(SB_URL + path, {
+    ...opts,
+    headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json', ...(opts.headers||{}) }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.status === 204 ? null : res.json();
+}
+
+async function loadData() {
+  setSyncBar('loading', 'Fetching latest reading...');
+  try {
+    readings = await sbFetch('/rest/v1/readings?select=*&order=date.asc');
+    setSyncBar('ok', `Updated · ${readings.length} reading${readings.length!==1?'s':''}`);
+    renderToday(); drawInlineChart();
+    if (document.getElementById('view-log').classList.contains('active'))       renderLog();
+    if (document.getElementById('view-analytics').classList.contains('active')) renderAnalytics();
+    if (isLandscape) drawFsChart();
+  } catch {
+    setSyncBar('err', 'Could not connect — check your internet');
+  }
+}
+
+async function upsert(record) {
+  await sbFetch('/rest/v1/readings', {
+    method: 'POST',
+    headers: { 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify(record)
+  });
+}
+
+// ── Navigation ────────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if (name==='log')       renderLog();
+  if (name==='analytics') renderAnalytics();
+  if (name==='home')      { drawInlineChart(); renderToday(); }
+}
+
+// ── Today ─────────────────────────────────────────────────────────
+function renderToday() {
+  const today = todayStr();
+  const r = readings.find(x=>x.date===today);
+  const el = document.getElementById('today-content');
+  const tagsEl = document.getElementById('today-tags');
+
+  if (!r) {
+    el.innerHTML = `<div class="no-reading">No reading yet for today 🌡️<br><small style="color:var(--text-dim);font-size:0.74rem;display:block;margin-top:5px">The bridge updates this automatically, or tap Log below</small></div>`;
+    tagsEl.innerHTML = '';
+    return;
+  }
+  const temp = parseFloat(r.temp);
+  const diff = (temp-baseTemp).toFixed(2);
+  const above = temp>baseTemp, equal = parseFloat(diff)===0;
+  const cls = equal?'chip-base':above?'chip-above':'chip-below';
+  const lbl = equal?'— At base temp':above?`▲ ${diff}° above base`:`▼ ${Math.abs(diff)}° below base`;
+  el.innerHTML = `
+    <div class="big-temp">${temp.toFixed(2)}<span>°C</span></div>
+    ${r.time_taken ? `<div class="big-time">taken at ${r.time_taken}</div>` : ''}
+    <div class="diff-display"><span class="status-chip ${cls}">${lbl}</span></div>
+  `;
+  // Tags
+  const tags = [];
+  if (r.cycle_start) tags.push(`<span class="tag cycle-start">🩸 Cycle start</span>`);
+  if (r.flow) tags.push(`<span class="tag flow-${r.flow}">${flowEmoji(r.flow)} ${cap(r.flow)}</span>`);
+  (r.mood||[]).forEach(m => tags.push(`<span class="tag">${moodEmoji(m)} ${moodLabel(m)}</span>`));
+  tagsEl.innerHTML = tags.join('');
+}
+
+// ── Modal open/close ──────────────────────────────────────────────
+function openModal(date) {
+  editingDate = date || null;
+  const r = date ? readings.find(x=>x.date===date) : readings.find(x=>x.date===todayStr());
+
+  document.getElementById('modal-title').textContent = (editingDate||r) ? 'Edit reading' : 'Log reading';
+  document.getElementById('m-date').value    = date || todayStr();
+  document.getElementById('m-time').value    = r?.time_taken || '';
+  document.getElementById('m-temp').value    = r ? parseFloat(r.temp).toFixed(2) : '';
+  document.getElementById('m-notes').value   = r?.notes || '';
+
+  // Flow
+  activeFlow = r?.flow || null;
+  document.querySelectorAll('.flow-pill').forEach(p => {
+    p.className = 'flow-pill';
+    if (p.dataset.flow === activeFlow) p.classList.add(`sel-${activeFlow}`);
   });
 
-  async function loadData() {
-    setSyncBar('loading', 'Fetching latest reading...');
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/readings?select=date,temp&order=date.asc`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-      });
-      if (!res.ok) throw new Error(await res.text());
-      readings = await res.json();
-      setSyncBar('ok', `Updated — ${readings.length} reading${readings.length !== 1 ? 's' : ''} loaded`);
-      renderToday(); drawChart();
-      if (document.getElementById('view-log').classList.contains('active')) renderLog();
-    } catch (e) {
-      setSyncBar('err', 'Could not connect — check your internet');
-    }
+  // Cycle start
+  cycleStart = r?.cycle_start || false;
+  document.getElementById('cycle-toggle').classList.toggle('on', cycleStart);
+
+  // Mood
+  const moods = r?.mood || [];
+  document.querySelectorAll('.mood-pill').forEach(p => {
+    p.classList.toggle('selected', moods.includes(p.dataset.mood));
+  });
+
+  document.getElementById('modal-backdrop').classList.add('open');
+  setTimeout(() => document.getElementById('m-temp').focus(), 280);
+}
+
+function closeModal() {
+  document.getElementById('modal-backdrop').classList.remove('open');
+}
+
+function closeModalOutside(e) {
+  if (e.target===document.getElementById('modal-backdrop')) closeModal();
+}
+
+// ── Modal controls ────────────────────────────────────────────────
+function toggleFlow(flow) {
+  activeFlow = activeFlow===flow ? null : flow;
+  document.querySelectorAll('.flow-pill').forEach(p => {
+    p.className = 'flow-pill';
+    if (p.dataset.flow===activeFlow) p.classList.add(`sel-${activeFlow}`);
+  });
+}
+
+function toggleCycleStart() {
+  cycleStart = !cycleStart;
+  document.getElementById('cycle-toggle').classList.toggle('on', cycleStart);
+}
+
+function toggleMood(el) {
+  el.classList.toggle('selected');
+}
+
+// ── Save ──────────────────────────────────────────────────────────
+async function saveReading() {
+  const date = document.getElementById('m-date').value;
+  const temp = parseFloat(document.getElementById('m-temp').value);
+  if (!date || isNaN(temp) || temp<30 || temp>45) {
+    showToast('Please enter a valid temperature (30–45°C)'); return;
+  }
+  const mood = [...document.querySelectorAll('.mood-pill.selected')].map(p=>p.dataset.mood);
+  const record = {
+    date,
+    temp,
+    time_taken:  document.getElementById('m-time').value || null,
+    flow:        activeFlow,
+    cycle_start: cycleStart,
+    mood,
+    notes:       document.getElementById('m-notes').value.trim()
+  };
+  try {
+    await upsert(record);
+    closeModal();
+    showToast(`Saved ${temp.toFixed(2)}°C for ${date} 🌸`);
+    await loadData();
+  } catch { showToast('Could not save — check your connection'); }
+}
+
+// ── Charts ────────────────────────────────────────────────────────
+function drawInlineChart() { drawChart(document.getElementById('chart-inline'), false); }
+function drawFsChart() {
+  const n = readings.length;
+  document.getElementById('fs-meta').textContent = n ? `${readings[0].date} → ${readings[n-1].date}` : '';
+  drawChart(document.getElementById('chart-fs'), true);
+}
+
+function drawChart(canvas, fs) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio||1;
+  const wrap = canvas.parentElement;
+  const W = wrap.clientWidth||(fs?window.innerWidth:320);
+  const H = wrap.clientHeight||(fs?window.innerHeight*.6:175);
+  canvas.width  = W*dpr; canvas.height = H*dpr;
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+
+  const data = fs ? readings : readings.slice(-30);
+  if (!data.length) {
+    ctx.fillStyle='rgba(244,114,182,.3)'; ctx.font='14px DM Sans'; ctx.textAlign='center';
+    ctx.fillText('No readings yet 🌸',W/2,H/2); return;
   }
 
-  function showView(name) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('view-' + name).classList.add('active');
-    document.getElementById('nav-' + name).classList.add('active');
-    if (name === 'log') renderLog();
-    if (name === 'home') { drawChart(); renderToday(); }
+  const ICON_ZONE = fs ? 22 : 18; // space below x-axis for cycle icons
+  const pad = { top:18, right:fs?18:12, bottom:(fs?34:26)+ICON_ZONE, left:fs?52:42 };
+  const cW=W-pad.left-pad.right, cH=H-pad.top-pad.bottom;
+  const temps=data.map(r=>parseFloat(r.temp));
+  const minV=Math.min(...temps,baseTemp)-.25, maxV=Math.max(...temps,baseTemp)+.25;
+  const xS=i=>pad.left+(i/(data.length-1||1))*cW;
+  const yS=v=>pad.top+(1-(v-minV)/(maxV-minV))*cH;
+
+  // Grid
+  const gc=fs?6:4;
+  ctx.strokeStyle='rgba(244,114,182,.07)'; ctx.lineWidth=1;
+  for(let i=0;i<=gc;i++){const y=pad.top+(i/gc)*cH;ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cW,y);ctx.stroke();}
+
+  // Y labels
+  ctx.fillStyle='rgba(244,114,182,.35)'; ctx.font=`${fs?11:10}px DM Sans`; ctx.textAlign='right';
+  for(let i=0;i<=gc;i++) ctx.fillText((maxV-(i/gc)*(maxV-minV)).toFixed(2),pad.left-5,pad.top+(i/gc)*cH+4);
+
+  // Base line
+  const yBase=yS(baseTemp);
+  ctx.strokeStyle='rgba(244,114,182,.3)'; ctx.lineWidth=fs?1.5:1; ctx.setLineDash([6,4]);
+  ctx.beginPath();ctx.moveTo(pad.left,yBase);ctx.lineTo(pad.left+cW,yBase);ctx.stroke();
+  ctx.setLineDash([]);
+  if(fs){ctx.fillStyle='rgba(244,114,182,.35)';ctx.font='10px DM Sans';ctx.textAlign='left';ctx.fillText(`base ${baseTemp}°`,pad.left+4,yBase-4);}
+
+  // Cycle start vertical lines
+  data.forEach((r,i)=>{
+    if(r.cycle_start){
+      ctx.strokeStyle='rgba(244,63,122,.25)'; ctx.lineWidth=1; ctx.setLineDash([3,4]);
+      ctx.beginPath();ctx.moveTo(xS(i),pad.top);ctx.lineTo(xS(i),pad.top+cH);ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  });
+
+  if(data.length>1){
+    // Above fill
+    ctx.beginPath();
+    data.forEach((r,i)=>{const y=Math.min(yS(parseFloat(r.temp)),yBase);i===0?ctx.moveTo(xS(0),y):ctx.lineTo(xS(i),y);});
+    ctx.lineTo(xS(data.length-1),yBase);ctx.lineTo(xS(0),yBase);ctx.closePath();
+    ctx.fillStyle='rgba(244,63,122,.07)';ctx.fill();
+    // Below fill
+    ctx.beginPath();ctx.moveTo(xS(0),yBase);
+    data.forEach((r,i)=>ctx.lineTo(xS(i),Math.max(yS(parseFloat(r.temp)),yBase)));
+    ctx.lineTo(xS(data.length-1),yBase);ctx.closePath();
+    ctx.fillStyle='rgba(129,140,248,.07)';ctx.fill();
+    // Glow pass
+    ctx.strokeStyle='rgba(244,114,182,.12)'; ctx.lineWidth=(fs?2.5:2)+5; ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.beginPath();
+    data.forEach((r,i)=>i===0?ctx.moveTo(xS(i),yS(parseFloat(r.temp))):ctx.lineTo(xS(i),yS(parseFloat(r.temp))));
+    ctx.stroke();
+    // Main line
+    const grad=ctx.createLinearGradient(pad.left,0,pad.left+cW,0);
+    grad.addColorStop(0,'#f472b6');grad.addColorStop(.5,'#ec4899');grad.addColorStop(1,'#f43f7a');
+    ctx.strokeStyle=grad; ctx.lineWidth=fs?2.5:2;
+    ctx.beginPath();
+    data.forEach((r,i)=>i===0?ctx.moveTo(xS(i),yS(parseFloat(r.temp))):ctx.lineTo(xS(i),yS(parseFloat(r.temp))));
+    ctx.stroke();
   }
 
-  function renderToday() {
-    const today = new Date().toISOString().slice(0, 10);
-    const reading = readings.find(r => r.date === today);
-    const el = document.getElementById('today-content');
-    if (!reading) {
-      el.innerHTML = `<div class="no-reading">No reading yet for today 🌡️<br><small style="color:var(--text-light);font-size:0.78rem;display:block;margin-top:6px">The bridge will update this automatically when the thermometer syncs</small></div>`;
-      return;
-    }
-    const temp = parseFloat(reading.temp);
-    const diff = (temp - baseTemp).toFixed(2);
-    const above = temp > baseTemp;
-    const equal = parseFloat(diff) === 0;
-    const chipClass = equal ? 'chip-base' : above ? 'chip-above' : 'chip-below';
-    const label = equal ? '— At base temperature' : above ? `▲ ${diff}° above base` : `▼ ${Math.abs(diff)}° below base`;
-    el.innerHTML = `
-      <div class="big-temp">${temp.toFixed(2)}<span>°C</span></div>
-      <div class="diff-display"><span class="status-chip ${chipClass}">${label}</span></div>
-    `;
-  }
+  // Dots
+  const showDots=!fs||data.length<=90;
+  const dotR=fs?5:3.5;
+  if(showDots) data.forEach((r,i)=>{
+    const t=parseFloat(r.temp),x=xS(i),y=yS(t);
+    const grd=ctx.createRadialGradient(x,y,0,x,y,dotR*2.5);
+    const col=t>=baseTemp?'rgba(244,63,122,.3)':'rgba(129,140,248,.3)';
+    grd.addColorStop(0,col);grd.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(x,y,dotR*2.5,0,Math.PI*2);ctx.fillStyle=grd;ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,dotR,0,Math.PI*2);
+    ctx.fillStyle=t>=baseTemp?'#f43f7a':'#818cf8';ctx.fill();
+    ctx.strokeStyle='rgba(15,8,16,.8)';ctx.lineWidth=1.5;ctx.stroke();
+  });
 
-  function drawChart() {
-    const canvas = document.getElementById('chart');
-    const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.parentElement.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = (rect.height || 200) * dpr;
-    ctx.scale(dpr, dpr);
-    const W = rect.width || 320, H = rect.height || 200;
-    ctx.clearRect(0, 0, W, H);
+  // X-axis labels
+  const xLabelY = pad.top+cH+(fs?14:12);
+  ctx.fillStyle='rgba(244,114,182,.32)';ctx.font=`${fs?11:9}px DM Sans`;ctx.textAlign='center';
+  const lblCount=fs?Math.min(data.length,10):4;
+  const step=Math.max(1,Math.floor((data.length-1)/(lblCount-1)));
+  const shown=new Set();
+  for(let i=0;i<data.length;i+=step){ctx.fillText(data[i].date.slice(5),xS(i),xLabelY);shown.add(i);}
+  if(!shown.has(data.length-1)&&data.length>1) ctx.fillText(data[data.length-1].date.slice(5),xS(data.length-1),xLabelY);
 
-    const last30 = readings.slice(-30);
-    if (!last30.length) {
-      ctx.fillStyle = '#d4a0c8'; ctx.font = '14px DM Sans'; ctx.textAlign = 'center';
-      ctx.fillText('No readings yet 🌸', W / 2, H / 2); return;
-    }
+  // Flow icons below x-axis
+  const iconY = xLabelY + (fs?13:11);
+  ctx.font=`${fs?13:10}px serif`;ctx.textAlign='center';
+  data.forEach((r,i)=>{
+    if(r.flow) ctx.fillText(flowEmoji(r.flow),xS(i),iconY);
+    else if(r.cycle_start) ctx.fillText('🩸',xS(i),iconY);
+  });
 
-    const pad = { top: 16, right: 16, bottom: 28, left: 42 };
-    const cW = W - pad.left - pad.right, cH = H - pad.top - pad.bottom;
-    const temps = last30.map(r => parseFloat(r.temp));
-    const minV = Math.min(...temps, baseTemp) - 0.3;
-    const maxV = Math.max(...temps, baseTemp) + 0.3;
-    const xS = i => pad.left + (i / (last30.length - 1 || 1)) * cW;
-    const yS = v => pad.top + (1 - (v - minV) / (maxV - minV)) * cH;
+  // Store dot positions for tooltip hit-testing (on canvas dataset)
+  canvas._dotData = data.map((r,i)=>({x:xS(i),y:yS(parseFloat(r.temp)),r:dotR,data:r}));
+}
 
-    // Grid
-    ctx.strokeStyle = 'rgba(253,164,189,0.2)'; ctx.lineWidth = 1;
-    for (let i = 0; i <= 4; i++) {
-      const y = pad.top + (i / 4) * cH;
-      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cW, y); ctx.stroke();
-    }
-
-    // Y labels
-    ctx.fillStyle = '#d4a0c8'; ctx.font = '10px DM Sans'; ctx.textAlign = 'right';
-    for (let i = 0; i <= 4; i++) {
-      ctx.fillText((maxV - (i / 4) * (maxV - minV)).toFixed(1), pad.left - 6, pad.top + (i / 4) * cH + 4);
-    }
-
-    // Base line
-    const yBase = yS(baseTemp);
-    ctx.strokeStyle = 'rgba(249,168,212,0.7)'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]);
-    ctx.beginPath(); ctx.moveTo(pad.left, yBase); ctx.lineTo(pad.left + cW, yBase); ctx.stroke();
-    ctx.setLineDash([]);
-
-    if (last30.length > 1) {
-      // Above fill
-      ctx.beginPath();
-      last30.forEach((r, i) => {
-        const y = Math.min(yS(parseFloat(r.temp)), yBase);
-        i === 0 ? ctx.moveTo(xS(0), y) : ctx.lineTo(xS(i), y);
-      });
-      ctx.lineTo(xS(last30.length - 1), yBase); ctx.lineTo(xS(0), yBase); ctx.closePath();
-      ctx.fillStyle = 'rgba(244,63,122,0.1)'; ctx.fill();
-
-      // Below fill
-      ctx.beginPath(); ctx.moveTo(xS(0), yBase);
-      last30.forEach((r, i) => ctx.lineTo(xS(i), Math.max(yS(parseFloat(r.temp)), yBase)));
-      ctx.lineTo(xS(last30.length - 1), yBase); ctx.closePath();
-      ctx.fillStyle = 'rgba(129,140,248,0.1)'; ctx.fill();
-
-      // Line
-      const grad = ctx.createLinearGradient(pad.left, 0, pad.left + cW, 0);
-      grad.addColorStop(0, '#f472b6'); grad.addColorStop(1, '#f43f7a');
-      ctx.strokeStyle = grad; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-      ctx.beginPath();
-      last30.forEach((r, i) => {
-        i === 0 ? ctx.moveTo(xS(i), yS(parseFloat(r.temp))) : ctx.lineTo(xS(i), yS(parseFloat(r.temp)));
-      });
-      ctx.stroke();
-    }
-
-    // Dots
-    last30.forEach((r, i) => {
-      const t = parseFloat(r.temp);
-      ctx.beginPath(); ctx.arc(xS(i), yS(t), 4, 0, Math.PI * 2);
-      ctx.fillStyle = t >= baseTemp ? '#f43f7a' : '#818cf8'; ctx.fill();
-      ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5; ctx.stroke();
+// ── Tooltip ───────────────────────────────────────────────────────
+function setupTooltip() {
+  ['chart-inline','chart-fs'].forEach(id=>{
+    const c = document.getElementById(id);
+    if (!c) return;
+    c.addEventListener('click', e=>{
+      const rect = c.getBoundingClientRect();
+      const px = e.clientX-rect.left, py = e.clientY-rect.top;
+      const hit = (c._dotData||[]).find(d=>Math.hypot(d.x-px,d.y-py)<=d.r*4);
+      if (hit) showTooltip(hit.data, e.clientX, e.clientY);
+      else     hideTooltip();
     });
+  });
+  document.addEventListener('click', e=>{
+    const tt=document.getElementById('chart-tooltip');
+    if(!tt.classList.contains('hidden')&&!e.target.closest('canvas')) hideTooltip();
+  });
+}
 
-    // X labels
-    ctx.fillStyle = '#d4a0c8'; ctx.font = '9px DM Sans'; ctx.textAlign = 'center';
-    [0, Math.floor(last30.length / 2), last30.length - 1]
-      .filter((v, i, a) => a.indexOf(v) === i)
-      .forEach(i => ctx.fillText(last30[i].date.slice(5), xS(i), H - 6));
+function showTooltip(r, cx, cy) {
+  const tt = document.getElementById('chart-tooltip');
+  const temp=parseFloat(r.temp);
+  const diff=(temp-baseTemp).toFixed(2);
+  const above=temp>baseTemp,equal=parseFloat(diff)===0;
+  const diffColor=equal?'var(--text-mid)':above?'var(--above)':'var(--below)';
+  const diffLbl=equal?'at base':above?`+${diff}° above base`:`${diff}° below base`;
+
+  document.getElementById('tt-date').textContent=r.date;
+  document.getElementById('tt-temp').textContent=`${temp.toFixed(2)}°C`;
+  document.getElementById('tt-diff').innerHTML=`<span style="color:${diffColor}">${diffLbl}</span>`;
+  document.getElementById('tt-time').textContent=r.time_taken?`Taken at ${r.time_taken}`:'';
+
+  const tags=[];
+  if(r.cycle_start) tags.push(`<span class="tag cycle-start" style="font-size:.68rem">🩸 Cycle start</span>`);
+  if(r.flow)        tags.push(`<span class="tag flow-${r.flow}" style="font-size:.68rem">${flowEmoji(r.flow)} ${cap(r.flow)}</span>`);
+  (r.mood||[]).forEach(m=>tags.push(`<span class="tag" style="font-size:.68rem">${moodEmoji(m)} ${moodLabel(m)}</span>`));
+  document.getElementById('tt-tags').innerHTML=tags.join('');
+  document.getElementById('tt-note').textContent=r.notes||'';
+
+  tt.classList.remove('hidden');
+  // Position — keep on screen
+  const ttW=180, ttH=120;
+  let left=cx, top=cy;
+  if(left+ttW/2>window.innerWidth) left=window.innerWidth-ttW/2-8;
+  if(left-ttW/2<0) left=ttW/2+8;
+  if(top-ttH<0) tt.style.transform='translate(-50%,12px)'; else tt.style.transform='translate(-50%,-110%)';
+  tt.style.left=left+'px'; tt.style.top=top+'px';
+}
+
+function hideTooltip() { document.getElementById('chart-tooltip').classList.add('hidden'); }
+
+// ── Orientation ───────────────────────────────────────────────────
+function setupOrientation() {
+  const mq=window.matchMedia('(orientation:landscape) and (max-height:500px)');
+  const handle=e=>{
+    isLandscape=e.matches;
+    document.getElementById('chart-fullscreen').classList.toggle('visible',isLandscape);
+    setTimeout(isLandscape?drawFsChart:drawInlineChart,80);
+  };
+  mq.addEventListener('change',handle); handle(mq);
+}
+
+// ── Log ───────────────────────────────────────────────────────────
+function renderLog() {
+  const el=document.getElementById('log-list');
+  if(!readings.length){el.innerHTML='<div class="empty-state">No readings yet 🌸</div>';return;}
+  el.innerHTML=[...readings].reverse().map(r=>{
+    const temp=parseFloat(r.temp);
+    const diff=(temp-baseTemp).toFixed(2);
+    const above=temp>baseTemp,equal=parseFloat(diff)===0;
+    const cls=equal?'chip-base':above?'chip-above':'chip-below';
+    const lbl=equal?'±0':above?`+${diff}`:diff;
+    const tags=[];
+    if(r.cycle_start) tags.push(`<span class="tag cycle-start">🩸 Cycle start</span>`);
+    if(r.flow)        tags.push(`<span class="tag flow-${r.flow}">${flowEmoji(r.flow)} ${cap(r.flow)}</span>`);
+    (r.mood||[]).forEach(m=>tags.push(`<span class="tag">${moodEmoji(m)} ${moodLabel(m)}</span>`));
+    const hasExtra = tags.length||r.notes;
+    return `<div class="log-item">
+      <div class="log-item-main" onclick="${hasExtra?`toggleLogExtra('${r.date}')`:''}" style="${hasExtra?'':'cursor:default'}">
+        <div class="log-left">
+          <div class="log-date">${r.date}</div>
+          <div class="log-temp-row">
+            <div class="log-temp">${temp.toFixed(2)} °C</div>
+            ${r.time_taken?`<div class="log-time-badge">${r.time_taken}</div>`:''}
+          </div>
+        </div>
+        <div class="log-right">
+          <span class="status-chip ${cls} log-diff">${lbl}°</span>
+          <button class="log-edit-btn" onclick="event.stopPropagation();openModal('${r.date}')">✏️</button>
+        </div>
+      </div>
+      ${hasExtra?`<div class="log-item-extra" id="extra-${r.date}">
+        <div class="log-tags">${tags.join('')}</div>
+        ${r.notes?`<div class="log-note">"${r.notes}"</div>`:''}
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function toggleLogExtra(date) {
+  const el=document.getElementById('extra-'+date);
+  if(el) el.classList.toggle('open');
+}
+
+// ── Analytics ─────────────────────────────────────────────────────
+function renderAnalytics() {
+  if(!readings.length){
+    document.getElementById('analytics-content').innerHTML='<div class="empty-state">No data yet 🌸</div>';
+    document.getElementById('cycle-history').innerHTML='<div class="empty-state">No cycles recorded yet</div>';
+    return;
   }
 
-  function renderLog() {
-    const el = document.getElementById('log-list');
-    if (!readings.length) { el.innerHTML = '<div class="empty-state">No readings yet 🌸</div>'; return; }
-    el.innerHTML = [...readings].reverse().map(r => {
-      const temp = parseFloat(r.temp);
-      const diff = (temp - baseTemp).toFixed(2);
-      const above = temp > baseTemp, equal = parseFloat(diff) === 0;
-      const chipClass = equal ? 'chip-base' : above ? 'chip-above' : 'chip-below';
-      const label = equal ? '±0' : above ? '+' + diff : diff;
-      return `<div class="log-item">
-        <div><div class="log-date">${r.date}</div><div class="log-temp">${temp.toFixed(2)} °C</div></div>
-        <span class="status-chip ${chipClass} log-diff">${label}°</span>
-      </div>`;
-    }).join('');
+  // Find cycle boundaries
+  const cycles = buildCycles();
+  const currentCycle = cycles[cycles.length-1] || { readings: readings };
+  const cr = currentCycle.readings;
+
+  // Current cycle stats
+  const temps = cr.map(r=>parseFloat(r.temp));
+  const avg   = (temps.reduce((a,b)=>a+b,0)/temps.length).toFixed(2);
+  const minT  = Math.min(...temps).toFixed(2);
+  const maxT  = Math.max(...temps).toFixed(2);
+
+  // Ovulation estimate — look for temp rise of ≥0.2°C sustained for 2+ days
+  let ovDay = null;
+  for(let i=1;i<cr.length-1;i++){
+    const t0=parseFloat(cr[i-1].temp),t1=parseFloat(cr[i].temp),t2=parseFloat(cr[i+1]?.temp||t1);
+    if(t1-t0>=0.18&&t2>=t1-0.05){ ovDay=cr[i].date; break; }
   }
 
-  function exportCSV() {
-    if (!readings.length) { showToast('No data to export'); return; }
-    let csv = 'Date,Temperature (°C),Difference from Base\n';
-    readings.forEach(r => { csv += `${r.date},${parseFloat(r.temp).toFixed(2)},${(parseFloat(r.temp) - baseTemp).toFixed(2)}\n`; });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = 'bloom-temperatures.csv'; a.click();
+  document.getElementById('analytics-content').innerHTML=`
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-label">Avg temp</div>
+        <div class="stat-value">${avg}°</div>
+        <div class="stat-sub">This cycle (${cr.length} days)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Range</div>
+        <div class="stat-value" style="font-size:1.1rem">${minT}–${maxT}</div>
+        <div class="stat-sub">Min / Max °C</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Est. ovulation</div>
+        <div class="stat-value" style="font-size:1rem">${ovDay?ovDay.slice(5):'—'}</div>
+        <div class="stat-sub">${ovDay?'Based on temp rise':'Not yet detected'}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Days logged</div>
+        <div class="stat-value">${cr.length}</div>
+        <div class="stat-sub">of ~${currentCycle.length||'?'} expected</div>
+      </div>
+    </div>
+  `;
+
+  // Cycle history
+  const histEl = document.getElementById('cycle-history');
+  if(cycles.length<=1){histEl.innerHTML='<div class="empty-state" style="padding:14px">Mark cycle starts to see history here</div>';return;}
+  histEl.innerHTML=cycles.slice().reverse().slice(0,10).map((c,i)=>{
+    const ct=c.readings.map(r=>parseFloat(r.temp));
+    const ca=(ct.reduce((a,b)=>a+b,0)/ct.length).toFixed(2);
+    return `<div class="cycle-row">
+      <div class="cycle-label">Cycle starting ${c.start}</div>
+      <div class="cycle-value">${c.length} days · avg ${ca}°C</div>
+    </div>`;
+  }).join('');
+
+  // Trend chart
+  drawTrendChart();
+}
+
+function buildCycles() {
+  if(!readings.length) return [];
+  const starts = readings.filter(r=>r.cycle_start).map(r=>r.date);
+  if(!starts.length) return [{ start: readings[0].date, readings, length: readings.length }];
+  const cycles=[];
+  for(let i=0;i<starts.length;i++){
+    const from=starts[i], to=starts[i+1]||null;
+    const cr=readings.filter(r=>r.date>=from&&(to?r.date<to:true));
+    cycles.push({ start:from, readings:cr, length:cr.length });
   }
+  return cycles;
+}
 
-  function setSyncBar(state, msg) {
-    const bar = document.getElementById('sync-bar');
-    bar.className = 'sync-bar' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : '');
-    const dot = bar.querySelector('.sync-dot');
-    dot.className = 'sync-dot' + (state === 'loading' ? ' spinning' : '');
-    document.getElementById('sync-text').textContent = msg;
-  }
+function drawTrendChart() {
+  const canvas=document.getElementById('trend-canvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.parentElement.clientWidth||320, H=80;
+  canvas.width=W*dpr; canvas.height=H*dpr; ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+  const data=readings.slice(-30);
+  if(data.length<2) return;
+  const pad={top:6,right:6,bottom:6,left:6};
+  const cW=W-pad.left-pad.right,cH=H-pad.top-pad.bottom;
+  const temps=data.map(r=>parseFloat(r.temp));
+  const minV=Math.min(...temps,baseTemp)-.1,maxV=Math.max(...temps,baseTemp)+.1;
+  const xS=i=>pad.left+(i/(data.length-1))*cW;
+  const yS=v=>pad.top+(1-(v-minV)/(maxV-minV))*cH;
+  // Base
+  const yBase=yS(baseTemp);
+  ctx.strokeStyle='rgba(244,114,182,.25)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(pad.left,yBase);ctx.lineTo(pad.left+cW,yBase);ctx.stroke();ctx.setLineDash([]);
+  // Line
+  const grad=ctx.createLinearGradient(pad.left,0,pad.left+cW,0);
+  grad.addColorStop(0,'#f472b6');grad.addColorStop(1,'#f43f7a');
+  ctx.strokeStyle=grad;ctx.lineWidth=2;ctx.lineJoin='round';
+  ctx.beginPath();
+  data.forEach((r,i)=>i===0?ctx.moveTo(xS(i),yS(parseFloat(r.temp))):ctx.lineTo(xS(i),yS(parseFloat(r.temp))));
+  ctx.stroke();
+}
 
-  let toastTimer;
-  function showToast(msg) {
-    const el = document.getElementById('toast');
-    el.textContent = msg; el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
-  }
+// ── Export ────────────────────────────────────────────────────────
+function exportCSV() {
+  if(!readings.length){showToast('No data to export');return;}
+  let csv='Date,Time,Temperature (°C),Diff from Base,Flow,Cycle Start,Mood,Notes\n';
+  readings.forEach(r=>{
+    csv+=`${r.date},${r.time_taken||''},${parseFloat(r.temp).toFixed(2)},${(parseFloat(r.temp)-baseTemp).toFixed(2)},${r.flow||''},${r.cycle_start?'yes':''},${(r.mood||[]).join('|')},"${(r.notes||'').replace(/"/g,'""')}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='bloom-temperatures.csv';a.click();
+}
 
-  window.addEventListener('resize', drawChart);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) loadData(); });
+// ── Helpers ───────────────────────────────────────────────────────
+function setSyncBar(state,msg) {
+  const bar=document.getElementById('sync-bar');
+  bar.className='sync-bar'+(state==='ok'?' ok':state==='err'?' err':'');
+  bar.querySelector('.sync-dot').className='sync-dot'+(state==='loading'?' spinning':'');
+  document.getElementById('sync-text').textContent=msg;
+}
 
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+function todayStr(){return new Date().toISOString().slice(0,10);}
+
+function cap(s){return s?s[0].toUpperCase()+s.slice(1):'';}
+
+function flowEmoji(f){return{heavy:'🔴',medium:'🟠',light:'🟡',spotting:'🟣'}[f]||'•';}
+
+function moodEmoji(m){return{poor_sleep:'😴',sick:'🤒',stressed:'😰',alcohol:'🍷',travel:'✈️',exercise:'🏃'}[m]||'•';}
+
+function moodLabel(m){return{poor_sleep:'Poor sleep',sick:'Sick',stressed:'Stressed',alcohol:'Alcohol',travel:'Travel',exercise:'Exercise'}[m]||m;}
+
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+window.addEventListener('resize',()=>{ if(isLandscape) drawFsChart(); else drawInlineChart(); });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadData(); });
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>

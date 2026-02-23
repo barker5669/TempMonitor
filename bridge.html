@@ -7,23 +7,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --pink-400: #f472b6;
-      --pink-500: #ec4899;
-      --pink-600: #db2777;
-      --rose-400: #fb7ba3;
-      --rose-500: #f43f7a;
-      --text-dark: #4a1942;
-      --text-mid: #9b5c8a;
-      --text-light: #d4a0c8;
-      --cream: #fff8f9;
+      --bg:       #0f0810;
+      --bg2:      #1a0f1c;
+      --card:     rgba(30,15,34,0.9);
+      --border:   rgba(244,114,182,0.15);
+      --pink:     #f472b6;
+      --pink-hot: #ec4899;
+      --rose:     #f43f7a;
+      --text:     #f9d4e8;
+      --text-mid: #c084a0;
+      --text-dim: #7a4f66;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'DM Sans', sans-serif;
-      background: var(--cream);
-      color: var(--text-dark);
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -33,237 +34,205 @@
 
     body::before {
       content: '';
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background:
-        radial-gradient(ellipse 60% 40% at 80% 10%, rgba(249,168,212,0.25) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 50% at 10% 80%, rgba(253,164,189,0.2) 0%, transparent 60%);
+        radial-gradient(ellipse 50% 35% at 75% 5%,  rgba(244,114,182,0.1) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 15% 85%, rgba(219,39,119,0.07) 0%, transparent 60%);
       pointer-events: none;
     }
 
-    .container {
-      position: relative;
-      max-width: 520px;
-      width: 100%;
-    }
+    .container { position: relative; max-width: 520px; width: 100%; }
 
     .logo {
       font-family: 'Playfair Display', serif;
       font-size: 2rem;
-      color: var(--pink-600);
+      color: var(--pink);
       text-align: center;
-      margin-bottom: 4px;
+      text-shadow: 0 0 30px rgba(244,114,182,0.3);
     }
 
-    .logo em { font-style: italic; color: var(--rose-400); }
+    .logo em { font-style: italic; color: var(--rose); }
 
     .subtitle {
       text-align: center;
-      font-size: 0.75rem;
-      letter-spacing: 0.15em;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: var(--text-light);
-      margin-bottom: 32px;
+      color: var(--text-dim);
+      margin-bottom: 28px;
+      margin-top: 4px;
     }
 
     .card {
-      background: rgba(255,255,255,0.8);
-      backdrop-filter: blur(16px);
-      border-radius: 24px;
-      border: 1px solid rgba(253,164,189,0.3);
-      box-shadow: 0 4px 32px rgba(244,114,182,0.08);
-      padding: 28px;
-      margin-bottom: 16px;
+      background: var(--card);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(244,114,182,0.06);
+      padding: 26px;
+      margin-bottom: 14px;
     }
 
     .card-title {
       font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      color: var(--pink-600);
+      font-size: 1rem;
+      color: var(--pink);
       margin-bottom: 20px;
     }
 
-    /* Status indicator */
+    /* Status blob */
     .status-blob {
-      width: 120px;
-      height: 120px;
+      width: 110px; height: 110px;
       border-radius: 50%;
-      margin: 0 auto 20px;
+      margin: 0 auto 18px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.8rem;
-      transition: all 0.5s;
-      background: rgba(253,164,189,0.15);
-      border: 3px solid rgba(253,164,189,0.3);
+      font-size: 2.6rem;
+      background: rgba(244,114,182,0.06);
+      border: 2px solid rgba(244,114,182,0.15);
+      transition: all 0.4s;
     }
 
     .status-blob.connected {
-      background: rgba(244,114,182,0.12);
-      border-color: var(--pink-400);
-      animation: pulse 2s ease-in-out infinite;
+      background: rgba(244,114,182,0.08);
+      border-color: var(--pink);
+      animation: pulse 2.5s ease-in-out infinite;
     }
 
     .status-blob.received {
-      background: rgba(134,239,172,0.2);
-      border-color: #86efac;
+      background: rgba(74,222,128,0.1);
+      border-color: #4ade80;
       animation: none;
     }
 
     @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(244,114,182,0.3); }
-      50% { box-shadow: 0 0 0 16px rgba(244,114,182,0); }
+      0%,100% { box-shadow: 0 0 0 0 rgba(244,114,182,0.2); }
+      50%      { box-shadow: 0 0 0 18px rgba(244,114,182,0); }
     }
 
-    .status-text {
-      text-align: center;
-      font-size: 1rem;
-      color: var(--text-mid);
-      margin-bottom: 6px;
-    }
+    .status-text { text-align: center; font-size: 1rem; color: var(--text-mid); margin-bottom: 4px; }
+    .status-sub  { text-align: center; font-size: 0.78rem; color: var(--text-dim); margin-bottom: 22px; }
 
-    .status-sub {
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--text-light);
-      margin-bottom: 24px;
-    }
-
+    /* Buttons */
     .btn {
-      border: none;
-      border-radius: 14px;
+      border: none; border-radius: 13px;
       font-family: 'DM Sans', sans-serif;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      width: 100%;
-      padding: 14px;
-      font-size: 1rem;
+      font-weight: 500; cursor: pointer;
+      transition: all 0.2s; width: 100%;
+      padding: 14px; font-size: 0.95rem;
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, var(--pink-500), var(--rose-500));
-      color: white;
-      box-shadow: 0 4px 16px rgba(236,72,153,0.3);
+      background: linear-gradient(135deg, var(--pink-hot), var(--rose));
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(244,114,182,0.25);
     }
 
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(236,72,153,0.4); }
-    .btn-primary:active { transform: scale(0.98); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-primary:hover   { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(244,114,182,0.35); }
+    .btn-primary:active  { transform: scale(0.98); }
+    .btn-primary:disabled{ opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Last reading */
+    .last-reading {
+      text-align: center;
+      padding: 14px;
+      background: rgba(244,114,182,0.05);
+      border-radius: 14px;
+      border: 1px solid rgba(244,114,182,0.12);
+      margin-top: 16px;
+    }
+
+    .last-reading-label { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
+
+    .last-reading-temp {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.4rem;
+      color: var(--pink);
+      text-shadow: 0 0 24px rgba(244,114,182,0.3);
+    }
+
+    .last-reading-date { font-size: 0.76rem; color: var(--text-dim); margin-top: 2px; }
+
+    /* Keepalive */
+    .keepalive {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      font-size: 0.74rem;
+      color: var(--text-dim);
+      margin-top: 14px;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* Manual entry */
+    .manual-row { display: flex; gap: 10px; margin-top: 14px; }
+
+    input[type="number"] {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid rgba(244,114,182,0.2);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="number"]:focus { border-color: var(--pink); }
+
+    .btn-manual {
+      background: rgba(244,114,182,0.08);
+      border: 1px solid rgba(244,114,182,0.2);
+      color: var(--pink);
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .btn-manual:hover { background: rgba(244,114,182,0.15); }
 
     /* Log */
     .log-wrap {
-      max-height: 220px;
+      max-height: 200px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
     }
 
     .log-entry {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      animation: fadeIn 0.3s ease;
+      padding: 9px 13px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      animation: fadeIn 0.25s ease;
     }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; } }
 
-    .log-entry.success { background: rgba(134,239,172,0.15); color: #15803d; }
-    .log-entry.error   { background: rgba(248,113,113,0.1); color: #dc2626; }
-    .log-entry.info    { background: rgba(249,168,212,0.15); color: var(--text-mid); }
+    .log-entry.success { background: rgba(74,222,128,0.08);  color: #4ade80;  border: 1px solid rgba(74,222,128,0.15); }
+    .log-entry.error   { background: rgba(248,113,113,0.08); color: #f87171;  border: 1px solid rgba(248,113,113,0.15); }
+    .log-entry.info    { background: rgba(244,114,182,0.05); color: var(--text-mid); border: 1px solid var(--border); }
 
-    .log-time { font-size: 0.72rem; opacity: 0.7; }
-
-    /* Last reading display */
-    .last-reading {
-      text-align: center;
-      padding: 16px;
-      background: rgba(249,168,212,0.1);
-      border-radius: 16px;
-      border: 1px solid rgba(249,168,212,0.3);
-      margin-top: 16px;
-    }
-
-    .last-reading-label {
-      font-size: 0.72rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-light);
-      margin-bottom: 6px;
-    }
-
-    .last-reading-temp {
-      font-family: 'Playfair Display', serif;
-      font-size: 2.5rem;
-      color: var(--pink-600);
-      line-height: 1;
-    }
-
-    .last-reading-date {
-      font-size: 0.78rem;
-      color: var(--text-light);
-      margin-top: 4px;
-    }
-
-    /* Keep alive indicator */
-    .keepalive {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.75rem;
-      color: var(--text-light);
-      justify-content: center;
-      margin-top: 12px;
-    }
-
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #86efac;
-      animation: blink 2s ease-in-out infinite;
-    }
-
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-    /* Manual entry */
-    .manual-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 16px;
-    }
-
-    input[type="number"] {
-      flex: 1;
-      padding: 12px 16px;
-      border: 2px solid rgba(253,164,189,0.4);
-      border-radius: 14px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 1rem;
-      color: var(--text-dark);
-      background: rgba(255,255,255,0.9);
-      outline: none;
-    }
-
-    input[type="number"]:focus { border-color: var(--pink-400); }
-
-    .btn-manual {
-      background: rgba(249,168,212,0.2);
-      border: 2px solid rgba(249,168,212,0.4);
-      color: var(--pink-600);
-      border-radius: 14px;
-      padding: 12px 18px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.9rem;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s;
-    }
-
-    .btn-manual:hover { background: rgba(249,168,212,0.35); }
+    .log-time { font-size: 0.7rem; opacity: 0.6; flex-shrink: 0; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -275,7 +244,7 @@
   <div class="card">
     <div class="status-blob" id="blob">🌡️</div>
     <div class="status-text" id="status-text">Not connected</div>
-    <div class="status-sub" id="status-sub">Click below to pair with the thermometer</div>
+    <div class="status-sub"  id="status-sub">Click below to pair with the thermometer</div>
 
     <button class="btn btn-primary" id="bt-btn" onclick="connectBluetooth()">
       Connect Thermometer via Bluetooth
@@ -295,7 +264,7 @@
 
   <div class="card">
     <div class="card-title">📝 Manual entry</div>
-    <p style="font-size:0.82rem;color:var(--text-mid);margin-bottom:4px">If Bluetooth isn't available, enter a reading manually for today.</p>
+    <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:4px">If Bluetooth isn't available, enter a reading for today manually.</p>
     <div class="manual-row">
       <input type="number" id="manual-temp" step="0.01" min="30" max="45" placeholder="36.50" />
       <button class="btn-manual" onclick="saveManual()">Save °C</button>
@@ -320,10 +289,8 @@
 
   document.getElementById('start-time').textContent = now();
 
-  let btDevice = null;
-  let lastSavedDate = null;
+  let btDevice = null, btConnected = false, lastSavedDate = null;
 
-  // ── Supabase helpers ────────────────────────────────────────────────────────
   async function upsertReading(date, temp) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/readings`, {
       method: 'POST',
@@ -336,132 +303,103 @@
       body: JSON.stringify({ date, temp })
     });
     if (!res.ok) throw new Error(await res.text());
-    return true;
   }
 
-  // ── Bluetooth ────────────────────────────────────────────────────────────────
   async function connectBluetooth() {
-    if (!navigator.bluetooth) {
-      addLog('error', 'Web Bluetooth not supported — use Chrome on desktop');
-      return;
-    }
+    if (!navigator.bluetooth) { addLog('error', 'Web Bluetooth not supported — use Chrome'); return; }
     const btn = document.getElementById('bt-btn');
-    btn.disabled = true;
-    btn.textContent = 'Scanning...';
+    btn.disabled = true; btn.textContent = 'Scanning...';
     try {
       btDevice = await navigator.bluetooth.requestDevice({
         filters: [{ services: ['health_thermometer'] }],
         optionalServices: ['health_thermometer']
       });
-
-      addLog('info', `Found device: ${btDevice.name || 'Thermometer'}`);
+      addLog('info', `Found: ${btDevice.name || 'Thermometer'}`);
       btDevice.addEventListener('gattserverdisconnected', onDisconnected);
-
-      await connect();
-    } catch (e) {
-      btn.disabled = false;
-      btn.textContent = 'Connect Thermometer via Bluetooth';
+      await connectGatt();
+    } catch(e) {
+      btn.disabled = false; btn.textContent = 'Connect Thermometer via Bluetooth';
       if (e.name !== 'NotFoundError') addLog('error', 'Error: ' + e.message);
     }
   }
 
-  async function connect() {
+  async function connectGatt() {
     const btn = document.getElementById('bt-btn');
     try {
       const server = await btDevice.gatt.connect();
       const service = await server.getPrimaryService('health_thermometer');
-      const char = await service.getCharacteristic('temperature_measurement');
+      const char   = await service.getCharacteristic('temperature_measurement');
       await char.startNotifications();
       char.addEventListener('characteristicvaluechanged', onTempReceived);
-
-      // UI — connected state
+      btConnected = true;
       setBlob('connected', '📡', 'Connected', `Paired with ${btDevice.name || 'Thermometer'}`);
-      btn.textContent = '✓ Connected — listening';
-      btn.disabled = true;
+      btn.textContent = '✓ Connected — listening'; btn.disabled = true;
       document.getElementById('keepalive').style.display = 'flex';
       addLog('success', `Connected to ${btDevice.name || 'Thermometer'}`);
-    } catch (e) {
+    } catch(e) {
       addLog('error', 'Connection failed: ' + e.message);
-      btn.disabled = false;
-      btn.textContent = 'Retry Connection';
+      btn.disabled = false; btn.textContent = 'Retry Connection';
     }
   }
 
   function onDisconnected() {
-    addLog('error', 'Thermometer disconnected — attempting reconnect...');
+    btConnected = false;
+    addLog('error', 'Disconnected — reconnecting in 3s...');
     setBlob('', '🔌', 'Disconnected', 'Reconnecting...');
-    setTimeout(() => {
-      if (btDevice) connect();
-    }, 3000);
+    setTimeout(() => { if (btDevice) connectGatt(); }, 3000);
   }
 
   async function onTempReceived(event) {
     const value = event.target.value;
     const flags = value.getUint8(0);
     let tempC = readIEEE11073(value, 1);
-    if (flags & 0x01) tempC = (tempC - 32) * 5 / 9; // convert F→C
-
+    if (flags & 0x01) tempC = (tempC - 32) * 5 / 9;
     if (!tempC || tempC < 30 || tempC > 45) return;
 
     const today = todayStr();
+    if (lastSavedDate === today) { addLog('info', `${tempC.toFixed(2)}°C received — already saved today`); return; }
 
-    // Debounce — only save once per day
-    if (lastSavedDate === today) {
-      addLog('info', `Reading ${tempC.toFixed(2)}°C received — already saved today`);
-      return;
-    }
-
-    setBlob('received', '✅', `${tempC.toFixed(2)}°C`, 'Saving to database...');
+    setBlob('received', '✅', `${tempC.toFixed(2)}°C`, 'Saving...');
     addLog('info', `Reading received: ${tempC.toFixed(2)}°C`);
-
     try {
       await upsertReading(today, tempC);
       lastSavedDate = today;
       showLastReading(tempC, today);
-      setBlob('connected', '📡', 'Connected', `Saved ${tempC.toFixed(2)}°C — listening for next reading`);
+      setBlob('connected', '📡', 'Connected', `Saved ${tempC.toFixed(2)}°C · listening`);
       addLog('success', `Saved ${tempC.toFixed(2)}°C for ${today} ✓`);
-    } catch (e) {
-      addLog('error', 'Failed to save: ' + e.message);
-      setBlob('connected', '📡', 'Connected', 'Save failed — will retry on next reading');
+    } catch(e) {
+      addLog('error', 'Save failed: ' + e.message);
+      setBlob('connected', '📡', 'Connected', 'Save failed — will retry');
     }
   }
 
-  function readIEEE11073(dataView, offset) {
-    const b0 = dataView.getUint8(offset);
-    const b1 = dataView.getUint8(offset + 1);
-    const b2 = dataView.getUint8(offset + 2);
-    let exp = dataView.getInt8(offset + 3);
+  function readIEEE11073(dv, offset) {
+    const b0 = dv.getUint8(offset), b1 = dv.getUint8(offset+1), b2 = dv.getUint8(offset+2);
+    let exp = dv.getInt8(offset+3);
     let mantissa = (b2 << 16) | (b1 << 8) | b0;
-    if (mantissa & 0x800000) mantissa = mantissa - 0x1000000;
+    if (mantissa & 0x800000) mantissa -= 0x1000000;
     return mantissa * Math.pow(10, exp);
   }
 
-  // ── Manual entry ─────────────────────────────────────────────────────────────
   async function saveManual() {
     const temp = parseFloat(document.getElementById('manual-temp').value);
-    if (isNaN(temp) || temp < 30 || temp > 45) {
-      addLog('error', 'Invalid temperature — must be between 30 and 45°C');
-      return;
-    }
+    if (isNaN(temp) || temp < 30 || temp > 45) { addLog('error', 'Invalid temperature — must be 30–45°C'); return; }
     const today = todayStr();
-    addLog('info', `Saving manual reading: ${temp.toFixed(2)}°C`);
     try {
       await upsertReading(today, temp);
       showLastReading(temp, today);
-      addLog('success', `Manual reading saved: ${temp.toFixed(2)}°C for ${today} ✓`);
+      addLog('success', `Manual: ${temp.toFixed(2)}°C saved for ${today} ✓`);
       document.getElementById('manual-temp').value = '';
-    } catch (e) {
-      addLog('error', 'Failed to save: ' + e.message);
+    } catch(e) {
+      addLog('error', 'Save failed: ' + e.message);
     }
   }
 
-  // ── UI helpers ────────────────────────────────────────────────────────────────
   function setBlob(cls, emoji, text, sub) {
-    const blob = document.getElementById('blob');
-    blob.className = 'status-blob ' + cls;
-    blob.textContent = emoji;
+    document.getElementById('blob').className = 'status-blob ' + cls;
+    document.getElementById('blob').textContent = emoji;
     document.getElementById('status-text').textContent = text;
-    document.getElementById('status-sub').textContent = sub;
+    document.getElementById('status-sub').textContent  = sub;
   }
 
   function showLastReading(temp, date) {
@@ -472,26 +410,17 @@
 
   function addLog(type, msg) {
     const wrap = document.getElementById('log-wrap');
-    const entry = document.createElement('div');
-    entry.className = 'log-entry ' + type;
-    entry.innerHTML = `<span>${msg}</span><span class="log-time">${now()}</span>`;
-    wrap.prepend(entry);
-    // Keep max 30 entries
+    const el = document.createElement('div');
+    el.className = 'log-entry ' + type;
+    el.innerHTML = `<span>${msg}</span><span class="log-time">${now()}</span>`;
+    wrap.prepend(el);
     while (wrap.children.length > 30) wrap.removeChild(wrap.lastChild);
   }
 
-  function todayStr() {
-    return new Date().toISOString().slice(0, 10);
-  }
+  function todayStr() { return new Date().toISOString().slice(0, 10); }
+  function now() { return new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
 
-  function now() {
-    return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  }
-
-  // Keep-alive ping every 30s so the tab doesn't throttle
-  setInterval(() => {
-    document.title = `Bloom Bridge · ${now()}`;
-  }, 30000);
+  setInterval(() => { document.title = `Bloom Bridge · ${now()}`; }, 30000);
 </script>
 </body>
 </html>
