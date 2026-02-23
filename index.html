@@ -269,6 +269,35 @@
       background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:10px;}
     @keyframes shimmer{to{background-position:-200% 0}}
 
+    /* ── Lock screen ────────────────────────────────────────────────── */
+    .lock-screen{position:fixed;inset:0;background:var(--bg);z-index:1000;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:32px;animation:fadeUp .3s ease;}
+    .lock-screen.hidden{display:none;}
+    .lock-logo{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--pink);
+      text-shadow:0 0 30px rgba(244,114,182,0.35);margin-bottom:6px;text-align:center;}
+    .lock-logo em{font-style:italic;color:var(--rose);}
+    .lock-sub{font-size:0.72rem;color:var(--text-dim);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:40px;}
+    .lock-dots{display:flex;gap:14px;margin-bottom:32px;height:16px;align-items:center;}
+    .lock-dot{width:14px;height:14px;border-radius:50%;background:rgba(244,114,182,0.18);
+      border:2px solid rgba(244,114,182,0.3);transition:all .15s;}
+    .lock-dot.filled{background:var(--pink);border-color:var(--pink);
+      box-shadow:0 0 10px rgba(244,114,182,0.5);}
+    .lock-dot.error{background:var(--rose);border-color:var(--rose);
+      animation:shake .3s ease;}
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+    .lock-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:280px;}
+    .lock-key{background:rgba(244,114,182,0.07);border:1px solid rgba(244,114,182,0.18);
+      border-radius:16px;padding:18px;font-family:'Playfair Display',serif;font-size:1.4rem;
+      color:var(--text);cursor:pointer;text-align:center;transition:all .12s;user-select:none;}
+    .lock-key:active,.lock-key.pressed{background:rgba(244,114,182,0.2);
+      border-color:var(--pink);transform:scale(0.94);}
+    .lock-key.del{font-family:'DM Sans',sans-serif;font-size:1rem;color:var(--text-dim);}
+    .lock-key.empty{background:none;border-color:transparent;pointer-events:none;}
+    .lock-error-msg{font-size:0.8rem;color:var(--rose);margin-top:16px;opacity:0;transition:opacity .2s;}
+    .lock-error-msg.show{opacity:1;}
+    .lock-setup-msg{font-size:0.82rem;color:var(--text-mid);text-align:center;margin-bottom:20px;line-height:1.6;}
+
     @media screen and (orientation:landscape) and (max-height:500px){
       .bottom-nav{display:none;}
       .app{padding-bottom:0;}
@@ -377,6 +406,10 @@
           <span style="color:var(--text-dim);font-size:0.8rem">°C</span>
         </div>
       </div>
+      <div class="setting-row">
+        <div><div class="setting-label">App PIN</div><div class="setting-sub" id="pin-status-sub">Loading…</div></div>
+        <button class="btn btn-ghost" style="padding:8px 14px;font-size:0.8rem" onclick="openPinSetup()">Change PIN</button>
+      </div>
       <div class="setting-row" style="border:none;padding-top:14px">
         <div><div class="setting-label">Export data</div><div class="setting-sub">Download as CSV</div></div>
         <button class="btn btn-primary" style="padding:8px 16px;font-size:0.8rem" onclick="exportCSV()">Export</button>
@@ -471,6 +504,30 @@
   </div>
 </div>
 
+<!-- ══ PIN SETUP MODAL ══════════════════════════════════════════ -->
+<div class="modal-backdrop" id="pin-modal-backdrop" onclick="closePinSetup(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="pin-modal-title">Set App PIN</div>
+    <p class="lock-setup-msg" id="pin-modal-msg">Choose a 4-digit PIN to protect the app. You'll only need to enter it once per device.</p>
+    <label class="field-label">New PIN (4 digits)</label>
+    <input type="number" id="pin-new" placeholder="e.g. 1234" maxlength="4"
+      style="letter-spacing:0.3em;font-size:1.3rem;text-align:center;margin-bottom:13px"/>
+    <label class="field-label">Confirm PIN</label>
+    <input type="number" id="pin-confirm" placeholder="Re-enter PIN"
+      style="letter-spacing:0.3em;font-size:1.3rem;text-align:center"/>
+    <div class="modal-row" style="margin-top:13px">
+      <button class="btn-cancel" onclick="closePinSetup()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1;padding:13px" onclick="savePinSetup()">Save PIN ✓</button>
+    </div>
+    <div style="margin-top:12px;text-align:center">
+      <button onclick="disablePin()" style="background:none;border:none;color:var(--text-dim);font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        Remove PIN protection
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ NAV ════════════════════════════════════════════════════════ -->
 <nav class="bottom-nav">
   <button class="nav-btn active" id="nav-home" onclick="showView('home')">
@@ -486,6 +543,33 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings
   </button>
 </nav>
+
+<!-- ══ LOCK SCREEN ══════════════════════════════════════════════ -->
+<div class="lock-screen hidden" id="lock-screen">
+  <div class="lock-logo">Bloom <em>·</em> Temp</div>
+  <div class="lock-sub" id="lock-sub">Enter PIN</div>
+  <div class="lock-dots" id="lock-dots">
+    <div class="lock-dot" id="ld0"></div>
+    <div class="lock-dot" id="ld1"></div>
+    <div class="lock-dot" id="ld2"></div>
+    <div class="lock-dot" id="ld3"></div>
+  </div>
+  <div class="lock-keypad">
+    <div class="lock-key" onclick="lockKey('1')">1</div>
+    <div class="lock-key" onclick="lockKey('2')">2</div>
+    <div class="lock-key" onclick="lockKey('3')">3</div>
+    <div class="lock-key" onclick="lockKey('4')">4</div>
+    <div class="lock-key" onclick="lockKey('5')">5</div>
+    <div class="lock-key" onclick="lockKey('6')">6</div>
+    <div class="lock-key" onclick="lockKey('7')">7</div>
+    <div class="lock-key" onclick="lockKey('8')">8</div>
+    <div class="lock-key" onclick="lockKey('9')">9</div>
+    <div class="lock-key empty"></div>
+    <div class="lock-key" onclick="lockKey('0')">0</div>
+    <div class="lock-key del" onclick="lockDel()">⌫</div>
+  </div>
+  <div class="lock-error-msg" id="lock-error">Incorrect PIN — try again</div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -515,6 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(loadData, 60000);
   setupOrientation();
   setupTooltip();
+  initLock();
 });
 
 // ── Supabase ──────────────────────────────────────────────────────
@@ -1147,6 +1232,157 @@ function showToast(msg){
 window.addEventListener('resize',()=>{ if(isLandscape) drawFsChart(); else drawInlineChart(); });
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadData(); });
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+// ── PIN / Lock screen ─────────────────────────────────────────────
+const PIN_UNLOCKED_KEY = 'bloom-unlocked';
+const PIN_CONFIG_KEY   = 'bloom-pin';
+let lockEntry = '';
+let storedPin = null;
+let lockMode  = 'enter'; // 'enter' | 'setup-new' | 'setup-confirm'
+let pendingNewPin = '';
+
+async function initLock() {
+  // Load PIN from Supabase config table
+  try {
+    const rows = await sbFetch('/rest/v1/config?key=eq.pin&select=value');
+    storedPin = rows.length ? rows[0].value : null;
+  } catch {
+    // If config table doesn't exist yet, fall back — no PIN set
+    storedPin = null;
+  }
+
+  updatePinStatusSub();
+
+  if (!storedPin) {
+    // No PIN set — app opens freely, prompt to set one in settings
+    return;
+  }
+
+  // Check if this device is already unlocked (within 30 days)
+  const unlocked = localStorage.getItem(PIN_UNLOCKED_KEY);
+  const cutoff   = Date.now() - (30 * 24 * 60 * 60 * 1000);
+  if (unlocked && parseInt(unlocked) > cutoff) return; // already trusted
+
+  showLockScreen();
+}
+
+function showLockScreen() {
+  lockEntry = '';
+  lockMode  = 'enter';
+  document.getElementById('lock-sub').textContent = 'Enter PIN';
+  document.getElementById('lock-error').classList.remove('show');
+  updateLockDots();
+  document.getElementById('lock-screen').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function hideLockScreen() {
+  document.getElementById('lock-screen').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function lockKey(digit) {
+  if (lockEntry.length >= 4) return;
+  // Button press visual feedback
+  event?.currentTarget?.classList.add('pressed');
+  setTimeout(() => event?.currentTarget?.classList.remove('pressed'), 120);
+
+  lockEntry += digit;
+  updateLockDots();
+  if (lockEntry.length === 4) {
+    setTimeout(() => checkPin(), 80);
+  }
+}
+
+function lockDel() {
+  lockEntry = lockEntry.slice(0, -1);
+  updateLockDots();
+  document.getElementById('lock-error').classList.remove('show');
+}
+
+function updateLockDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('ld' + i);
+    dot.classList.toggle('filled', i < lockEntry.length);
+    dot.classList.remove('error');
+  }
+}
+
+function checkPin() {
+  if (lockEntry === storedPin) {
+    // Correct — save unlock timestamp and open app
+    localStorage.setItem(PIN_UNLOCKED_KEY, Date.now().toString());
+    // Flash dots green briefly then hide
+    for (let i = 0; i < 4; i++) {
+      const dot = document.getElementById('ld' + i);
+      dot.style.background = '#4ade80';
+      dot.style.borderColor = '#4ade80';
+    }
+    setTimeout(hideLockScreen, 350);
+  } else {
+    // Wrong — shake dots, show error
+    for (let i = 0; i < 4; i++) document.getElementById('ld' + i).classList.add('error');
+    document.getElementById('lock-error').classList.add('show');
+    setTimeout(() => {
+      lockEntry = '';
+      updateLockDots();
+    }, 600);
+  }
+}
+
+// ── PIN setup (from Settings) ─────────────────────────────────────
+function openPinSetup() {
+  document.getElementById('pin-new').value     = '';
+  document.getElementById('pin-confirm').value = '';
+  document.getElementById('pin-modal-title').textContent = storedPin ? 'Change App PIN' : 'Set App PIN';
+  document.getElementById('pin-modal-msg').textContent   = storedPin
+    ? 'Enter a new 4-digit PIN. This will replace the current one on all devices.'
+    : 'Choose a 4-digit PIN to protect the app. You only enter it once per device.';
+  document.getElementById('pin-modal-backdrop').classList.add('open');
+  setTimeout(() => document.getElementById('pin-new').focus(), 280);
+}
+
+function closePinSetup(e) {
+  if (e && e.target !== document.getElementById('pin-modal-backdrop')) return;
+  document.getElementById('pin-modal-backdrop').classList.remove('open');
+}
+
+async function savePinSetup() {
+  const newPin     = document.getElementById('pin-new').value.trim();
+  const confirmPin = document.getElementById('pin-confirm').value.trim();
+  if (!/^\d{4}$/.test(newPin))     { showToast('PIN must be exactly 4 digits'); return; }
+  if (newPin !== confirmPin)        { showToast('PINs do not match'); return; }
+  try {
+    await sbFetch('/rest/v1/config', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ key: 'pin', value: newPin })
+    });
+    storedPin = newPin;
+    // Trust this device immediately
+    localStorage.setItem(PIN_UNLOCKED_KEY, Date.now().toString());
+    document.getElementById('pin-modal-backdrop').classList.remove('open');
+    updatePinStatusSub();
+    showToast('PIN saved 🌸');
+  } catch { showToast('Could not save PIN — check connection'); }
+}
+
+async function disablePin() {
+  if (!confirm('Remove PIN protection? Anyone with the link can access the app.')) return;
+  try {
+    await sbFetch('/rest/v1/config?key=eq.pin', { method: 'DELETE' });
+    storedPin = null;
+    localStorage.removeItem(PIN_UNLOCKED_KEY);
+    document.getElementById('pin-modal-backdrop').classList.remove('open');
+    updatePinStatusSub();
+    showToast('PIN removed');
+  } catch { showToast('Could not remove PIN — check connection'); }
+}
+
+function updatePinStatusSub() {
+  const el = document.getElementById('pin-status-sub');
+  if (el) el.textContent = storedPin ? 'PIN protection is on' : 'No PIN set — app is open';
+}
 </script>
 </body>
 </html>

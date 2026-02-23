@@ -1,5 +1,5 @@
 // ─── INCREMENT THIS every time you push new code ──────────────────
-const CACHE_VERSION = 'bloom-v3.1';
+const CACHE_VERSION = 'bloom-v3.2';
 // ──────────────────────────────────────────────────────────────────
 
 const ASSETS = [
