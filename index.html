@@ -497,12 +497,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Supabase ──────────────────────────────────────────────────────
 async function sbFetch(path, opts={}) {
+  const baseHeaders = {
+    'apikey': SB_KEY,
+    'Authorization': `Bearer ${SB_KEY}`,
+    'Content-Type': 'application/json'
+  };
   const res = await fetch(SB_URL + path, {
     ...opts,
-    headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`,
-      'Content-Type': 'application/json', ...(opts.headers||{}) }
+    headers: { ...baseHeaders, ...(opts.headers||{}) }
   });
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`${res.status}: ${errText}`);
+  }
   return res.status === 204 ? null : res.json();
 }
 
@@ -515,7 +522,8 @@ async function loadData() {
     if (document.getElementById('view-log').classList.contains('active'))       renderLog();
     if (document.getElementById('view-analytics').classList.contains('active')) renderAnalytics();
     if (isLandscape) drawFsChart();
-  } catch {
+  } catch(e) {
+    console.error('loadData error:', e);
     setSyncBar('err', 'Could not connect — check your internet');
   }
 }
@@ -523,7 +531,7 @@ async function loadData() {
 async function upsert(record) {
   await sbFetch('/rest/v1/readings', {
     method: 'POST',
-    headers: { 'Prefer': 'resolution=merge-duplicates' },
+    headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify(record)
   });
 }
@@ -573,12 +581,23 @@ function renderToday() {
 function openModal(date) {
   editingDate = date || null;
   const r = date ? readings.find(x=>x.date===date) : readings.find(x=>x.date===todayStr());
+  const isEdit = !!(date && r);
 
-  document.getElementById('modal-title').textContent = (editingDate||r) ? 'Edit reading' : 'Log reading';
-  document.getElementById('m-date').value    = date || todayStr();
-  document.getElementById('m-time').value    = r?.time_taken || '';
-  document.getElementById('m-temp').value    = r ? parseFloat(r.temp).toFixed(2) : '';
-  document.getElementById('m-notes').value   = r?.notes || '';
+  document.getElementById('modal-title').textContent = isEdit ? 'Edit reading' : 'Log reading';
+  document.getElementById('m-date').value  = date || todayStr();
+  document.getElementById('m-temp').value  = r ? parseFloat(r.temp).toFixed(2) : '';
+  document.getElementById('m-notes').value = r?.notes || '';
+
+  // Time: keep saved value when editing, auto-fill now for new entries
+  if (r?.time_taken) {
+    document.getElementById('m-time').value = r.time_taken;
+  } else if (!isEdit) {
+    const now = new Date();
+    document.getElementById('m-time').value =
+      String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  } else {
+    document.getElementById('m-time').value = '';
+  }
 
   // Flow
   activeFlow = r?.flow || null;
