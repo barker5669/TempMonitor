@@ -78,6 +78,17 @@
     .chip-base {background:rgba(244,114,182,0.07);color:var(--text-mid);border-color:var(--border);}
     .no-reading{text-align:center;padding:18px;color:var(--text-dim);font-size:0.86rem;line-height:1.7;}
 
+    /* ── Cycle day banner ───────────────────────────────────────────── */
+    .cycle-day-banner{display:flex;align-items:center;justify-content:space-between;
+      padding:10px 14px;border-radius:12px;margin-bottom:12px;
+      background:rgba(244,63,122,0.08);border:1px solid rgba(244,63,122,0.2);}
+    .cycle-day-label{font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);}
+    .cycle-day-number{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--rose);line-height:1;}
+    .cycle-day-sub{font-size:0.7rem;color:var(--text-dim);margin-top:1px;}
+    .cycle-day-right{text-align:right;}
+    .avg-cycle-pill{font-size:0.72rem;padding:3px 10px;border-radius:999px;
+      background:rgba(244,114,182,0.08);border:1px solid rgba(244,114,182,0.15);color:var(--text-mid);}
+
     /* ── Today tags row ─────────────────────────────────────────── */
     .today-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;justify-content:center;}
     .tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;
@@ -279,6 +290,16 @@
       <div class="sync-bar" id="sync-bar">
         <div class="sync-dot spinning"></div>
         <span id="sync-text">Fetching latest reading...</span>
+      </div>
+      <div id="cycle-day-banner" style="display:none" class="cycle-day-banner">
+        <div>
+          <div class="cycle-day-label">Cycle day</div>
+          <div class="cycle-day-number" id="cycle-day-num">—</div>
+        </div>
+        <div class="cycle-day-right">
+          <div class="avg-cycle-pill" id="avg-cycle-pill">Avg cycle: —</div>
+          <div class="cycle-day-sub" id="cycle-day-sub"></div>
+        </div>
       </div>
       <div id="today-content"><div class="skeleton" style="height:66px;margin:10px 0"></div></div>
       <div id="today-tags" class="today-tags"></div>
@@ -561,11 +582,75 @@ function showView(name) {
 }
 
 // ── Today ─────────────────────────────────────────────────────────
+// ── Cycle day calculation ─────────────────────────────────────────
+function getCycleInfo() {
+  const today = todayStr();
+
+  // Find all cycle start dates in ascending order
+  const starts = readings
+    .filter(r => r.cycle_start)
+    .map(r => r.date)
+    .sort();
+
+  if (!starts.length) return null;
+
+  // Current cycle start = last start that is <= today
+  const currentStart = [...starts].reverse().find(d => d <= today);
+  if (!currentStart) return null;
+
+  // Cycle day = diff in days from start to today + 1
+  const msPerDay = 86400000;
+  const startMs  = new Date(currentStart).getTime();
+  const todayMs  = new Date(today).getTime();
+  const cycleDay = Math.floor((todayMs - startMs) / msPerDay) + 1;
+
+  // Average cycle length from completed cycles (need at least 2 starts)
+  let avgLength = null;
+  if (starts.length >= 2) {
+    const lengths = [];
+    for (let i = 1; i < starts.length; i++) {
+      const len = Math.round(
+        (new Date(starts[i]).getTime() - new Date(starts[i-1]).getTime()) / msPerDay
+      );
+      if (len > 0 && len < 60) lengths.push(len); // sanity check
+    }
+    if (lengths.length) avgLength = Math.round(lengths.reduce((a,b)=>a+b,0) / lengths.length);
+  }
+
+  // Days until expected next period
+  let daysUntilNext = null;
+  if (avgLength) {
+    daysUntilNext = avgLength - cycleDay;
+  }
+
+  return { cycleDay, currentStart, avgLength, daysUntilNext };
+}
+
 function renderToday() {
   const today = todayStr();
   const r = readings.find(x=>x.date===today);
   const el = document.getElementById('today-content');
   const tagsEl = document.getElementById('today-tags');
+
+  // Always render cycle day banner regardless of whether temp logged today
+  const cycleInfo = getCycleInfo();
+  const banner = document.getElementById('cycle-day-banner');
+  if (cycleInfo) {
+    banner.style.display = 'flex';
+    document.getElementById('cycle-day-num').textContent = cycleInfo.cycleDay;
+    document.getElementById('avg-cycle-pill').textContent =
+      cycleInfo.avgLength ? `Avg cycle: ${cycleInfo.avgLength} days` : 'Avg cycle: tracking…';
+    const sub = cycleInfo.daysUntilNext !== null
+      ? (cycleInfo.daysUntilNext > 0
+          ? `Next period in ~${cycleInfo.daysUntilNext} day${cycleInfo.daysUntilNext!==1?'s':''}`
+          : cycleInfo.daysUntilNext === 0
+          ? 'Period may start today'
+          : `${Math.abs(cycleInfo.daysUntilNext)} day${Math.abs(cycleInfo.daysUntilNext)!==1?'s':''} past expected`)
+      : `Started ${cycleInfo.currentStart.slice(5)}`;
+    document.getElementById('cycle-day-sub').textContent = sub;
+  } else {
+    banner.style.display = 'none';
+  }
 
   if (!r) {
     el.innerHTML = `<div class="no-reading">No reading yet for today 🌡️<br><small style="color:var(--text-dim);font-size:0.74rem;display:block;margin-top:5px">The bridge updates this automatically, or tap Log below</small></div>`;
@@ -916,6 +1001,7 @@ function renderAnalytics() {
 
   // Find cycle boundaries
   const cycles = buildCycles();
+  const cycleInfo = getCycleInfo();
   const currentCycle = cycles[cycles.length-1] || { readings: readings };
   const cr = currentCycle.readings;
 
@@ -953,6 +1039,11 @@ function renderAnalytics() {
         <div class="stat-label">Days logged</div>
         <div class="stat-value">${cr.length}</div>
         <div class="stat-sub">of ~${currentCycle.length||'?'} expected</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Avg cycle length</div>
+        <div class="stat-value">${cycleInfo?.avgLength ? cycleInfo.avgLength + ' days' : '—'}</div>
+        <div class="stat-sub">${cycles.length>=2 ? 'Based on '+( cycles.length-1)+' cycle'+(cycles.length>2?'s':'') : 'Need 2+ cycles'}</div>
       </div>
     </div>
   `;
